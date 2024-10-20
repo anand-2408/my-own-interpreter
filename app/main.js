@@ -142,13 +142,12 @@ function number(tokens) {
         // Consume the ".".
         advance();
 
-        while (isDigit(peek())) advance();   
-
+        while (isDigit(peek())) advance();
     }
 
     const numberLiteral = source.substring(start, current);
 
-    // Push the token with the correct lexeme and literal (without trailing zeroes)
+    // Push the token with the correct lexeme and literal
     tokens.push({ type: 'NUMBER', lexeme: numberLiteral, literal: parseFloat(numberLiteral) });
 }
 
