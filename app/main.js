@@ -25,87 +25,85 @@ const filename = args[1];
 // Read the content of the file
 const fileContent = fs.readFileSync(filename, "utf8");
 
-// Helper method to match the next character and consume it if it matches
-function match(nextChar) {
-  if (current < fileContent.length && fileContent[current] === nextChar) {
-    current++;
-    return true;
-  }
-  return false;
-}
-
-let hadError = false;  // Track if any error occurs
+// This variable will track if any errors were found
+let hadError = false;
 
 // Check if the file is empty and print EOF if it is
 if (fileContent.length === 0) {
   console.log("EOF  null");
 } else {
-  let current = 0;
+  // Split the file content into lines
+  let lines = fileContent.split('\n');
 
-  // Loop through the file content character by character
-  while (current < fileContent.length) {
-    const char = fileContent[current++];
-
-    // Handle specific characters (parentheses, operators, etc.)
-    switch (char) {
-      case '(':
-        console.log("LEFT_PAREN ( null");
-        break;
-      case ')':
-        console.log("RIGHT_PAREN ) null");
-        break;
-      case '{':
-        console.log("LEFT_BRACE { null");
-        break;
-      case '}':
-        console.log("RIGHT_BRACE } null");
-        break;
-      case ',':
-        console.log("COMMA , null");
-        break;
-      case '.':
-        console.log("DOT . null");
-        break;
-      case '-':
-        console.log("MINUS - null");
-        break;
-      case '+':
-        console.log("PLUS + null");
-        break;
-      case ';':
-        console.log("SEMICOLON ; null");
-        break;
-      case '*':
-        console.log("STAR * null");
-        break;
-      case '=':
-        if (match('=')) {
-          console.log("EQUAL_EQUAL == null");
-        } else {
-          console.log("EQUAL = null");
-        }
-        break;
-      case '!':
-        if (match('=')) {
-          console.log("BANG_EQUAL != null");
-        } else {
-          console.log("BANG ! null");
-        }
-        break;
-      default:
-        // Handle invalid characters
-        console.error(`[line 1] Error: Unexpected character: ${char}`);
-        hadError = true;  // Mark that an error has occurred
+  // Loop through each line
+  for (let i = 0; i < lines.length; i++) {
+    // Loop through each character in the line
+    for (let j = 0; j < lines[i].length; j++) {
+      // Check for specific characters (parentheses, braces, commas, etc.)
+      switch (lines[i][j]) {
+        case '(':
+          console.log("LEFT_PAREN ( null");
+          break;
+        case ')':
+          console.log("RIGHT_PAREN ) null");
+          break;
+        case '{':
+          console.log("LEFT_BRACE { null");
+          break;
+        case '}':
+          console.log("RIGHT_BRACE } null");
+          break;
+        case ',':
+          console.log("COMMA , null");
+          break;
+        case '.':
+          console.log("DOT . null");
+          break;
+        case '-':
+          console.log("MINUS - null");
+          break;
+        case '+':
+          console.log("PLUS + null");
+          break;
+        case ';':
+          console.log("SEMICOLON ; null");
+          break;
+        case '*':
+          console.log("STAR * null");
+          break;
+        case '=':
+          if (lines[i][j + 1] === '=') {
+            console.log("EQUAL_EQUAL == null");
+            j++; // Move past the second '='
+          } else {
+            console.log("EQUAL = null");
+          }
+          break;
+        case '!':
+          if (lines[i][j + 1] === '=') {
+            console.log("BANG_EQUAL != null");
+            j++; // Move past the second '='
+          } else {
+            console.log("BANG ! null");
+          }
+          break;
+        // Handle unexpected characters
+        default:
+          console.error(`[line ${i + 1}] Error: Unexpected character: ${lines[i][j]}`);
+          hadError = true;
+      }
     }
   }
 
-  // After processing all characters, print the EOF token
+  // After processing all the characters, print the EOF token
   console.log("EOF  null");
 }
 
-// If there were any errors, set the exit code to 65
+// Add debug log before exit
 if (hadError) {
-  process.exitCode = 65;
+  console.error("Errors were encountered. Exiting with code 65.");
+  process.exit(65); // Exit with code 65 if there was an error
 } else {
-  process.exit(0);  // Exit with 0 if there were no errors
+  console.error("No errors encountered. Exiting with code 0.");
+  process.exit(0);  // Exit with code 0 if no error
 }
