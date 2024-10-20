@@ -154,8 +154,8 @@ function number(tokens) {
 
   // If it's a fractional number
   if (isFractional) {
-    // Convert to number, but return as string formatted correctly
-    literalValue = parseFloat(numberLiteral).toString();
+    // Return the number as-is, as it already contains decimals
+    literalValue = numberLiteral;
   } else {
     // If it's an integer, ensure it has .0
     literalValue = numberLiteral + '.0';
