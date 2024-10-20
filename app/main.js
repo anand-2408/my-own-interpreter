@@ -72,16 +72,19 @@ if (fileContent.length === 0) {
           j++;
         }
 
+        let numberLiteral;
         if (line[j] === '.' && isDigit(line[j + 1])) {
           j++;
           while (j < line.length && isDigit(line[j])) {
             j++;
           }
+          numberLiteral = line.substring(start, j); // Floating-point number
+        } else {
+          numberLiteral = line.substring(start, j); // Integer number
+          numberLiteral += ".0"; // Format the integer to a float
         }
 
-        const numberLexeme = line.substring(start, j);
-        const numberLiteral = parseFloat(numberLexeme);
-        console.log(`NUMBER ${numberLexeme} ${numberLiteral}`);
+        console.log(`NUMBER ${numberLiteral} ${parseFloat(numberLiteral)}`);
         j--; // Adjust index because for loop will increment it
         continue;
       }
