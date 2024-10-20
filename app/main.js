@@ -92,7 +92,13 @@ if (fileContent.length === 0) {
           console.log("EQUAL = null");
           break;
         case '!':
-          console.log("BANG ! null");
+          // Handle the possibility of a BANG_EQUAL token
+          if (lines[i][j + 1] === '=') {
+            console.log("BANG_EQUAL != null");
+            j++; // Advance to skip the '='
+          } else {
+            console.log("BANG ! null");
+          }
           break;
         case '<':
           console.log("LESS < null");
