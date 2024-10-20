@@ -25,87 +25,78 @@ const filename = args[1];
 // Read the content of the file
 const fileContent = fs.readFileSync(filename, "utf8");
 
+// Helper method to match the next character and consume it if it matches
+function match(nextChar) {
+  if (current < fileContent.length && fileContent[current] === nextChar) {
+    current++;
+    return true;
+  }
+  return false;
+}
+
 // Check if the file is empty and print EOF if it is
 if (fileContent.length === 0) {
   console.log("EOF  null");
 } else {
-  // Split the file content into lines
-  let lines = fileContent.split('\n');
-  let hasError = false; // Track whether an error occurred
+  let current = 0;
 
-  function match(currentLine, index, expectedChar) {
-    if (index + 1 < currentLine.length && currentLine[index + 1] === expectedChar) {
-      return true;
-    }
-    return false;
-  }
+  // Loop through the file content character by character
+  while (current < fileContent.length) {
+    const char = fileContent[current++];
 
-  // Loop through each line
-  for (let i = 0; i < lines.length; i++) {
-    // Loop through each character in the line
-    for (let j = 0; j < lines[i].length; j++) {
-      const char = lines[i][j];
-
-      // Check for specific characters (parentheses, braces, commas, etc.)
-      switch (char) {
-        case '(':
-          console.log("LEFT_PAREN ( null");
-          break;
-        case ')':
-          console.log("RIGHT_PAREN ) null");
-          break;
-        case '{':
-          console.log("LEFT_BRACE { null");
-          break;
-        case '}':
-          console.log("RIGHT_BRACE } null");
-          break;
-        case ',':
-          console.log("COMMA , null");
-          break;
-        case '.':
-          console.log("DOT . null");
-          break;
-        case '-':
-          console.log("MINUS - null");
-          break;
-        case '+':
-          console.log("PLUS + null");
-          break;
-        case ';':
-          console.log("SEMICOLON ; null");
-          break;
-        case '*':
-          console.log("STAR * null");
-          break;
-
-        // Handle assignment and equality operators
-        case '=':
-          if (match(lines[i], j, '=')) {
-            console.log("EQUAL_EQUAL == null");
-            j++; // Skip the next character since we've handled the '=='
-          } else {
-            console.log("EQUAL = null");
-          }
-          break;
-
-        // Handle unexpected characters
-        default:
-          if (!/[\s]/.test(char)) { // Ignore spaces
-            console.error(`[line ${i + 1}] Error: Unexpected character: ${char}`);
-            hasError = true;  // Mark that we encountered an error
-          }
-      }
+    // Handle specific characters (parentheses, operators, etc.)
+    switch (char) {
+      case '(':
+        console.log("LEFT_PAREN ( null");
+        break;
+      case ')':
+        console.log("RIGHT_PAREN ) null");
+        break;
+      case '{':
+        console.log("LEFT_BRACE { null");
+        break;
+      case '}':
+        console.log("RIGHT_BRACE } null");
+        break;
+      case ',':
+        console.log("COMMA , null");
+        break;
+      case '.':
+        console.log("DOT . null");
+        break;
+      case '-':
+        console.log("MINUS - null");
+        break;
+      case '+':
+        console.log("PLUS + null");
+        break;
+      case ';':
+        console.log("SEMICOLON ; null");
+        break;
+      case '*':
+        console.log("STAR * null");
+        break;
+      case '=':
+        if (match('=')) {
+          console.log("EQUAL_EQUAL == null");
+        } else {
+          console.log("EQUAL = null");
+        }
+        break;
+      case '!':
+        if (match('=')) {
+          console.log("BANG_EQUAL != null");
+        } else {
+          console.log("BANG ! null");
+        }
+        break;
+      default:
+        // Handle invalid characters
+        console.error(`[line 1] Error: Unexpected character: ${char}`);
+        process.exitCode = 65; // Set exit code to 65 if there are errors
     }
   }
 
-  // After processing all the characters, print the EOF token
+  // After processing all characters, print the EOF token
   console.log("EOF  null");
-
-  // Exit with code 65 if any errors were found
-  if (hasError) {
-    process.exit(65);
-  } else {
-    process.exit(0);
-  }
 }
