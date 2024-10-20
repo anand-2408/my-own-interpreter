@@ -38,6 +38,9 @@ if (fileContent.length === 0) {
   // Loop through each line
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i];
+    let insideString = false;  // Track if we are inside a string
+    let stringStart = 0;       // Start index for string
+    let stringContent = '';    // Capture the content inside the string
 
     // Loop through each character in the line
     for (let j = 0; j < line.length; j++) {
@@ -46,6 +49,33 @@ if (fileContent.length === 0) {
       // Ignore whitespace characters: space, tab, and newline
       if (char === ' ' || char === '\t' || char === '\n') {
         continue; // Skip whitespace
+      }
+
+      // Handle string literals
+      if (char === '"') {
+        if (insideString) {
+          // Closing quote found, print the STRING token
+          console.log(`STRING "${stringContent}" ${stringContent}`);
+          insideString = false; // Exit the string state
+        } else {
+          // Starting quote found
+          insideString = true;
+          stringContent = ''; // Reset string content
+          stringStart = j;    // Mark the start of the string
+        }
+        continue;
+      }
+
+      // If we're inside a string, accumulate the characters
+      if (insideString) {
+        stringContent += char;
+
+        // If we reach the end of the line and the string is not closed, raise an error
+        if (j === line.length - 1 && insideString) {
+          console.error(`[line ${i + 1}] Error: Unterminated string.`);
+          hadError = true;
+        }
+        continue;
       }
 
       // Handle comments: if we encounter "//", ignore the rest of the line
@@ -139,5 +169,5 @@ if (hadError) {
   console.error("Errors were encountered. Exiting with code 65.");
   process.exit(65); // Exit with code 65 if there was an error
 } else {
-  process.exit(0);
+  process.exit(0); // Exit with code 0 if no errors were encountered
 }
