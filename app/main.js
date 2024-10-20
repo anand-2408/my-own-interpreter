@@ -135,9 +135,10 @@ if (fileContent.length === 0) {
               while (isDigit(lines[i][j])) j++;
             }
 
+            // Capture the entire number lexeme
             const numberLiteral = lines[i].substring(start, j);
-            const literalValue = parseFloat(numberLiteral).toFixed(1); // Ensure the literal has .0
-            console.log(`NUMBER ${numberLiteral} ${literalValue}`);
+            // Use the numberLiteral directly for the literal value
+            console.log(`NUMBER ${numberLiteral} ${numberLiteral}`);
             j--; // Adjust index because for loop will increment it
             continue;
           }
