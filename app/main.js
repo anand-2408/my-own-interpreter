@@ -135,11 +135,15 @@ function isAtEnd() {
 
 // Function to scan for number literals
 function number(tokens) {
+  // Track if we encountered a decimal point
+  let isFractional = false;
+  
   while (isDigit(peek())) advance();
 
-  // Look for a fractional part.
+  // Check for a fractional part.
   if (peek() === '.' && isDigit(peekNext())) {
-    // Consume the ".".
+    isFractional = true; // We have a fractional number
+    // Consume the "."
     advance();
 
     while (isDigit(peek())) advance();
@@ -148,10 +152,10 @@ function number(tokens) {
   const numberLiteral = source.substring(start, current);
   let literalValue;
 
-  // Determine how to format the literal value
-  if (numberLiteral.includes('.')) {
-    // For floating-point numbers, parse and format to one decimal place
-    literalValue = parseFloat(numberLiteral).toFixed(1);
+  // If it's a fractional number
+  if (isFractional) {
+    // Convert to number, but return as string formatted correctly
+    literalValue = parseFloat(numberLiteral).toString();
   } else {
     // If it's an integer, ensure it has .0
     literalValue = numberLiteral + '.0';
