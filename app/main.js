@@ -25,59 +25,71 @@ const filename = args[1];
 // Read the content of the file
 const fileContent = fs.readFileSync(filename, "utf8");
 
-// Remove this line (or comment it out) to prevent the error:
-// throw new Error("Scanner not implemented");
-
 // Check if the file is empty and print EOF if it is
 if (fileContent.length === 0) {
   console.log("EOF  null");
-} else {
-  // Split the file content into lines
-  let lines = fileContent.split('\n');
-  
-  // Loop through each line
-  for (let i = 0; i < lines.length; i++) {
-    // Loop through each character in the line
-    for (let j = 0; j < lines[i].length; j++) {
-      // Check for specific characters (parentheses, braces, commas, etc.)
-      switch (lines[i][j]) {
-        case '(':
-          console.log("LEFT_PAREN ( null");
-          break;
-        case ')':
-          console.log("RIGHT_PAREN ) null");
-          break;
-        case '{':
-          console.log("LEFT_BRACE { null");
-          break;
-        case '}':
-          console.log("RIGHT_BRACE } null");
-          break;
-        case ',':
-          console.log("COMMA , null");
-          break;
-        case '.':
-          console.log("DOT . null");
-          break;
-        case '-':
-          console.log("MINUS - null");
-          break;
-        case '+':
-          console.log("PLUS + null");
-          break;
-        case ';':
-          console.log("SEMICOLON ; null");
-          break;
-        case '*':
-          console.log("STAR * null");
-          break;
-        // Handle unexpected characters
-        default:
-          console.error(`Unexpected character: ${lines[i][j]}`);
-      }
+  process.exit(0);
+} 
+
+// Split the file content into lines
+let lines = fileContent.split('\n');
+let hasError = false;  // To track if any errors occur
+
+// Loop through each line
+for (let i = 0; i < lines.length; i++) {
+  // Loop through each character in the line
+  for (let j = 0; j < lines[i].length; j++) {
+    const char = lines[i][j];
+
+    // Check for specific characters (parentheses, braces, commas, etc.)
+    switch (char) {
+      case '(':
+        console.log("LEFT_PAREN ( null");
+        break;
+      case ')':
+        console.log("RIGHT_PAREN ) null");
+        break;
+      case '{':
+        console.log("LEFT_BRACE { null");
+        break;
+      case '}':
+        console.log("RIGHT_BRACE } null");
+        break;
+      case ',':
+        console.log("COMMA , null");
+        break;
+      case '.':
+        console.log("DOT . null");
+        break;
+      case '-':
+        console.log("MINUS - null");
+        break;
+      case '+':
+        console.log("PLUS + null");
+        break;
+      case ';':
+        console.log("SEMICOLON ; null");
+        break;
+      case '*':
+        console.log("STAR * null");
+        break;
+      
+      // Handle unexpected characters
+      default:
+        if (!/[\s]/.test(char)) {  // Ignore spaces
+          console.error(`[line 1] Error: Unexpected character: ${char}`);
+          hasError = true;  // Mark that we encountered an error
+        }
     }
   }
+}
 
-  // After processing all the characters, print the EOF token
-  console.log("EOF  null");
+// After processing all the characters, print the EOF token
+console.log("EOF  null");
+
+// Exit with code 65 if there was an error, otherwise exit with code 0
+if (hasError) {
+  process.exit(65);
+} else {
+  process.exit(0);
 }
