@@ -141,10 +141,15 @@ function number(tokens) {
   }
 
   const numberLiteral = source.substring(start, current);
-  const literalValue = numberLiteral.includes('.')
-    ? parseFloat(numberLiteral).toString() // Convert to number and back to string to remove trailing zeros
-    : numberLiteral + '.0'; // Append .0 for integers
-  
+  let literalValue;
+
+  // Ensure there's at least one digit after the decimal point
+  if (numberLiteral.includes('.')) {
+    literalValue = parseFloat(numberLiteral).toFixed(3).replace(/\.0+$/, ''); // Keep up to three decimal places, remove trailing zeros
+  } else {
+    literalValue = parseFloat(numberLiteral).toFixed(1); // For integers, ensure one digit after decimal
+  }
+
   tokens.push({ type: 'NUMBER', lexeme: numberLiteral, literal: literalValue });
 }
 
