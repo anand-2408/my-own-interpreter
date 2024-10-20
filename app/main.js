@@ -148,7 +148,7 @@ function number(tokens) {
     const numberLiteral = source.substring(start, current);
 
     // Push the token with the correct lexeme and literal
-    tokens.push({ type: 'NUMBER', lexeme: numberLiteral, literal: parseFloat(numberLiteral) });
+    tokens.push({ type: 'NUMBER', lexeme: numberLiteral, literal: parseFloat(numberLiteral).toString() });
 }
 
 // Function to scan for string literals
