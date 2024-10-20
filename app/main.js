@@ -37,10 +37,17 @@ if (fileContent.length === 0) {
 
   // Loop through each line
   for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+
     // Loop through each character in the line
-    for (let j = 0; j < lines[i].length; j++) {
+    for (let j = 0; j < line.length; j++) {
+      // Handle comments: if we encounter "//", ignore the rest of the line
+      if (line[j] === '/' && line[j + 1] === '/') {
+        break; // Ignore the rest of the line
+      }
+
       // Check for specific characters (parentheses, braces, commas, etc.)
-      switch (lines[i][j]) {
+      switch (line[j]) {
         case '(':
           console.log("LEFT_PAREN ( null");
           break;
@@ -71,8 +78,13 @@ if (fileContent.length === 0) {
         case '*':
           console.log("STAR * null");
           break;
+        case '/':
+          if (line[j + 1] !== '/') {
+            console.log("SLASH / null");
+          }
+          break;
         case '=':
-          if (lines[i][j + 1] === '=') {
+          if (line[j + 1] === '=') {
             console.log("EQUAL_EQUAL == null");
             j++; // Move past the second '='
           } else {
@@ -80,16 +92,15 @@ if (fileContent.length === 0) {
           }
           break;
         case '!':
-          if (lines[i][j + 1] === '=') {
+          if (line[j + 1] === '=') {
             console.log("BANG_EQUAL != null");
             j++; // Move past the second '='
           } else {
             console.log("BANG ! null");
           }
           break;
-        // Add relational operators here
         case '<':
-          if (lines[i][j + 1] === '=') {
+          if (line[j + 1] === '=') {
             console.log("LESS_EQUAL <= null");
             j++; // Move past the second '='
           } else {
@@ -97,7 +108,7 @@ if (fileContent.length === 0) {
           }
           break;
         case '>':
-          if (lines[i][j + 1] === '=') {
+          if (line[j + 1] === '=') {
             console.log("GREATER_EQUAL >= null");
             j++; // Move past the second '='
           } else {
@@ -106,7 +117,7 @@ if (fileContent.length === 0) {
           break;
         // Handle unexpected characters
         default:
-          console.error(`[line ${i + 1}] Error: Unexpected character: ${lines[i][j]}`);
+          console.error(`[line ${i + 1}] Error: Unexpected character: ${line[j]}`);
           hadError = true;
       }
     }
