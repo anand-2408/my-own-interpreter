@@ -147,9 +147,10 @@ function number(tokens) {
   const numberLiteral = source.substring(start, current);
   let literalValue;
 
-  // Ensure integer literals have ".0" appended and decimal literals keep their value
+  // Format the literal value to remove unnecessary trailing zeros
   if (numberLiteral.includes('.')) {
-    literalValue = numberLiteral; // Keep the original decimal value
+    // Use parseFloat to get the numeric value and then toString to convert back
+    literalValue = parseFloat(numberLiteral).toFixed(1); // Ensure one digit after decimal
   } else {
     literalValue = numberLiteral + '.0'; // Append .0 for integers
   }
