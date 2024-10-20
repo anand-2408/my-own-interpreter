@@ -148,10 +148,10 @@ function number(tokens) {
   const numberLiteral = source.substring(start, current);
   let literalValue;
 
-  // Handle formatting for literal value
+  // Determine how to format the literal value
   if (numberLiteral.includes('.')) {
-    // Preserve the exact format for decimal numbers
-    literalValue = numberLiteral;
+    // For floating-point numbers, parse and format to one decimal place
+    literalValue = parseFloat(numberLiteral).toFixed(1);
   } else {
     // If it's an integer, ensure it has .0
     literalValue = numberLiteral + '.0';
