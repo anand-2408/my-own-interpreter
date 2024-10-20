@@ -156,7 +156,7 @@ function number(tokens) {
     literalValue = numberLiteral;
   } else {
     // For integers, format it as x.0
-    literalValue = parseFloat(numberLiteral).toFixed(1); // Ensures it has one decimal place
+    literalValue = parseFloat(numberLiteral).toFixed(1); // Converts to float and ensures one decimal
   }
 
   // Push the token with the correct lexeme and literal
