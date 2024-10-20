@@ -48,7 +48,9 @@ if (fileContent.length === 0) {
 
       // Ignore whitespace characters: space, tab, and newline
       if (char === ' ' || char === '\t' || char === '\n') {
-        continue; // Skip whitespace
+        if (!insideString) {
+          continue; // Skip whitespace if not inside a string
+        }
       }
 
       // Handle string literals
@@ -78,8 +80,8 @@ if (fileContent.length === 0) {
         continue;
       }
 
-      // Handle comments: if we encounter "//", ignore the rest of the line
-      if (char === '/' && line[j + 1] === '/') {
+      // Handle comments: if we encounter "//", ignore the rest of the line only if not inside a string
+      if (char === '/' && line[j + 1] === '/' && !insideString) {
         break; // Ignore the rest of the line
       }
 
@@ -116,7 +118,7 @@ if (fileContent.length === 0) {
           console.log("STAR * null");
           break;
         case '/':
-          if (line[j + 1] !== '/') {
+          if (line[j + 1] !== '/' || insideString) {
             console.log("SLASH / null");
           }
           break;
