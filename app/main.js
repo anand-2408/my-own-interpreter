@@ -28,13 +28,16 @@ const fileContent = fs.readFileSync(filename, "utf8");
 // Initialize error tracking variable
 let hadError = false;
 
+// Function to check if a character is a digit
+const isDigit = (char) => char >= '0' && char <= '9';
+
 // Check if the file is empty and print EOF if it is
 if (fileContent.length === 0) {
   console.log("EOF  null");
 } else {
   // Split the file content into lines
   let lines = fileContent.split('\n');
-  
+
   // Loop through each line
   for (let i = 0; i < lines.length; i++) {
     // Loop through each character in the line
@@ -97,37 +100,42 @@ if (fileContent.length === 0) {
         case '>':
           console.log("GREATER > null");
           break;
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
+        case '"':
+          // Handle string literals
           let start = j;
-          while (j < lines[i].length && /\d/.test(lines[i][j])) {
+          j++; // Skip the opening quote
+          while (j < lines[i].length && lines[i][j] !== '"') {
             j++;
+          }
+          if (j === lines[i].length) {
+            console.error(`[line ${i + 1}] Error: Unterminated string.`);
+            hadError = true;
+            break;
+          }
+          const stringLiteral = lines[i].substring(start, j + 1);
+          const stringValue = lines[i].substring(start + 1, j);
+          console.log(`STRING ${stringLiteral} ${stringValue}`);
+          continue;
+
+        default:
+          // Handle numbers
+          if (isDigit(char)) {
+            let start = j;
+            while (isDigit(lines[i][j])) j++;
+            
+            // Look for a fractional part
+            if (lines[i][j] === '.' && isDigit(lines[i][j + 1])) {
+              j++; // Consume the decimal point
+              while (isDigit(lines[i][j])) j++;
+            }
+
+            const numberLiteral = lines[i].substring(start, j);
+            const literalValue = parseFloat(numberLiteral).toFixed(1); // Ensure the literal has .0
+            console.log(`NUMBER ${numberLiteral} ${literalValue}`);
+            j--; // Adjust index because for loop will increment it
+            continue;
           }
 
-          let numberLiteral;
-          if (lines[i][j] === '.' && /\d/.test(lines[i][j + 1])) {
-            j++;
-            while (j < lines[i].length && /\d/.test(lines[i][j])) {
-              j++;
-            }
-            numberLiteral = lines[i].substring(start, j); // Floating-point number
-            console.log(`NUMBER ${numberLiteral} ${numberLiteral}`); // Print floating-point number
-          } else {
-            numberLiteral = lines[i].substring(start, j); // Integer number
-            let literalValue = `${numberLiteral}.0`; // Ensure the literal has .0
-            console.log(`NUMBER ${numberLiteral} ${literalValue}`); // Print without decimal point for integer
-          }
-          j--; // Adjust index because for loop will increment it
-          continue;
-        default:
           // Handle unexpected characters
           console.error(`[line ${i + 1}] Error: Unexpected character: ${char}`);
           hadError = true;
