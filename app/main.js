@@ -5,16 +5,16 @@ const args = process.argv.slice(2);
 
 // Ensure that the correct number of arguments is provided
 if (args.length < 2) {
-  console.error("Usage: ./your_program.sh tokenize <filename>");
-  process.exit(1);
+    console.error("Usage: ./your_program.sh tokenize <filename>");
+    process.exit(1);
 }
 
 const command = args[0];
 
 // Check if the provided command is "tokenize"
 if (command !== "tokenize") {
-  console.error(`Unknown command: ${command}`);
-  process.exit(1);
+    console.error(`Unknown command: ${command}`);
+    process.exit(1);
 }
 
 // Get the filename from the second argument
@@ -32,164 +32,155 @@ let start = 0; // Track the start index of the current token
 
 // Function to log errors
 function error(line, message) {
-  console.error(`[line ${line}] Error: ${message}`);
-  hadError = true;
+    console.error(`[line ${line}] Error: ${message}`);
+    hadError = true;
 }
 
 // Function to check if a character is a digit
 function isDigit(c) {
-  return c >= '0' && c <= '9';
+    return c >= '0' && c <= '9';
 }
 
 // Function to tokenize the input
 function scanTokens() {
-  const tokens = [];
+    const tokens = [];
 
-  while (!isAtEnd()) {
-    start = current; // Mark the start of the token
-    scanToken(tokens); // Scan the next token
-  }
+    while (!isAtEnd()) {
+        start = current; // Mark the start of the token
+        scanToken(tokens); // Scan the next token
+    }
 
-  tokens.push({ type: 'EOF', lexeme: '', literal: null });
-  return tokens;
+    tokens.push({ type: 'EOF', lexeme: '', literal: null });
+    return tokens;
 }
 
 // Function to scan a single token
 function scanToken(tokens) {
-  const c = advance();
+    const c = advance();
 
-  switch (c) {
-    case '(':
-      tokens.push({ type: 'LEFT_PAREN', lexeme: '(', literal: null });
-      break;
-    case ')':
-      tokens.push({ type: 'RIGHT_PAREN', lexeme: ')', literal: null });
-      break;
-    case '{':
-      tokens.push({ type: 'LEFT_BRACE', lexeme: '{', literal: null });
-      break;
-    case '}':
-      tokens.push({ type: 'RIGHT_BRACE', lexeme: '}', literal: null });
-      break;
-    case ',':
-      tokens.push({ type: 'COMMA', lexeme: ',', literal: null });
-      break;
-    case '.':
-      // Check for number literals starting with a dot
-      if (isDigit(peekNext())) {
-        number(tokens); // Handle numbers like ".456"
-      } else {
-        tokens.push({ type: 'DOT', lexeme: '.', literal: null });
-      }
-      break;
-    case '-':
-      tokens.push({ type: 'MINUS', lexeme: '-', literal: null });
-      break;
-    case '+':
-      tokens.push({ type: 'PLUS', lexeme: '+', literal: null });
-      break;
-    case ';':
-      tokens.push({ type: 'SEMICOLON', lexeme: ';', literal: null });
-      break;
-    case '*':
-      tokens.push({ type: 'STAR', lexeme: '*', literal: null });
-      break;
-    case '/':
-      tokens.push({ type: 'SLASH', lexeme: '/', literal: null });
-      break;
-    case '!':
-      tokens.push({ type: 'BANG', lexeme: '!', literal: null });
-      break;
-    case '=':
-      tokens.push({ type: 'EQUAL', lexeme: '=', literal: null });
-      break;
-    case ' ':
-    case '\r':
-    case '\t':
-      // Ignore whitespace
-      break;
-    case '\n':
-      line++; // Increment line number on newline
-      break;
-    default:
-      if (isDigit(c)) {
-        number(tokens);
-      } else if (c === '"') {
-        string(tokens);
-      } else {
-        error(line, `Unexpected character: ${c}`);
-      }
-      break;
-  }
+    switch (c) {
+        case '(':
+            tokens.push({ type: 'LEFT_PAREN', lexeme: '(', literal: null });
+            break;
+        case ')':
+            tokens.push({ type: 'RIGHT_PAREN', lexeme: ')', literal: null });
+            break;
+        case '{':
+            tokens.push({ type: 'LEFT_BRACE', lexeme: '{', literal: null });
+            break;
+        case '}':
+            tokens.push({ type: 'RIGHT_BRACE', lexeme: '}', literal: null });
+            break;
+        case ',':
+            tokens.push({ type: 'COMMA', lexeme: ',', literal: null });
+            break;
+        case '.':
+            // Check for number literals starting with a dot
+            if (isDigit(peekNext())) {
+                number(tokens); // Handle numbers like ".456"
+            } else {
+                tokens.push({ type: 'DOT', lexeme: '.', literal: null });
+            }
+            break;
+        case '-':
+            tokens.push({ type: 'MINUS', lexeme: '-', literal: null });
+            break;
+        case '+':
+            tokens.push({ type: 'PLUS', lexeme: '+', literal: null });
+            break;
+        case ';':
+            tokens.push({ type: 'SEMICOLON', lexeme: ';', literal: null });
+            break;
+        case '*':
+            tokens.push({ type: 'STAR', lexeme: '*', literal: null });
+            break;
+        case '/':
+            tokens.push({ type: 'SLASH', lexeme: '/', literal: null });
+            break;
+        case '!':
+            tokens.push({ type: 'BANG', lexeme: '!', literal: null });
+            break;
+        case '=':
+            tokens.push({ type: 'EQUAL', lexeme: '=', literal: null });
+            break;
+        case ' ':
+        case '\r':
+        case '\t':
+            // Ignore whitespace
+            break;
+        case '\n':
+            line++; // Increment line number on newline
+            break;
+        default:
+            if (isDigit(c)) {
+                number(tokens);
+            } else if (c === '"') {
+                string(tokens);
+            } else {
+                error(line, `Unexpected character: ${c}`);
+            }
+            break;
+    }
 }
 
 // Function to advance the current character
 function advance() {
-  return source.charAt(current++);
+    return source.charAt(current++);
 }
 
 // Function to check if we've reached the end of the input
 function isAtEnd() {
-  return current >= source.length;
+    return current >= source.length;
 }
 
 // Function to scan for number literals
 function number(tokens) {
-  while (isDigit(peek())) advance();
-
-  // Look for a fractional part.
-  if (peek() === '.' && isDigit(peekNext())) {
-    // Consume the ".".
-    advance();
-
     while (isDigit(peek())) advance();
-  }
 
-  const numberLiteral = source.substring(start, current);
-  let literalValue;
+    // Look for a fractional part.
+    if (peek() === '.' && isDigit(peekNext())) {
+        // Consume the ".".
+        advance();
 
-  // Handle formatting for literal value
-  if (numberLiteral.includes('.')) {
-    // If it's a decimal, format correctly
-    literalValue = parseFloat(numberLiteral).toString();
-  } else {
-    // If it's an integer, ensure it has .0
-    literalValue = numberLiteral + '.0';
-  }
+        while (isDigit(peek())) advance();   
 
-  // Push the token with the correct lexeme and literal
-  tokens.push({ type: 'NUMBER', lexeme: numberLiteral, literal: literalValue });
+    }
+
+    const numberLiteral = source.substring(start, current);
+
+    // Push the token with the correct lexeme and literal (without trailing zeroes)
+    tokens.push({ type: 'NUMBER', lexeme: numberLiteral, literal: parseFloat(numberLiteral) });
 }
 
 // Function to scan for string literals
 function string(tokens) {
-  let value = '';
-  
-  while (peek() !== '"' && !isAtEnd()) {
-    if (peek() === '\n') line++;
-    value += advance();
-  }
+    let value = '';
 
-  if (isAtEnd()) {
-    error(line, "Unterminated string.");
-    return;
-  }
+    while (peek() !== '"' && !isAtEnd()) {
+        if (peek() === '\n') line++;
+        value += advance();
+    }
 
-  // Consume the closing "
-  advance();
-  
-  tokens.push({ type: 'STRING', lexeme: `"${value}"`, literal: value });
+    if (isAtEnd()) {
+        error(line, "Unterminated string.");
+        return;
+    }
+
+    // Consume the closing "
+    advance();
+
+    tokens.push({ type: 'STRING', lexeme: `"${value}"`, literal: value });
 }
 
 // Function to peek at the next character
 function peek() {
-  return isAtEnd() ? '\0' : source.charAt(current);
+    return isAtEnd() ? '\0' : source.charAt(current);
 }
 
 // Function to peek at the next character
 function peekNext() {
-  if (current + 1 >= source.length) return '\0';
-  return source.charAt(current + 1);
+    if (current + 1 >= source.length) return '\0';
+    return source.charAt(current + 1);
 }
 
 // Run the tokenizer
@@ -197,7 +188,7 @@ const tokens = scanTokens();
 
 // Output the tokens
 for (const token of tokens) {
-  console.log(`${token.type} ${token.lexeme} ${token.literal}`);
+    console.log(`${token.type} ${token.lexeme} ${token.literal}`);
 }
 
 // Exit with the appropriate code
