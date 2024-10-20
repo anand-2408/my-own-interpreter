@@ -41,13 +41,20 @@ if (fileContent.length === 0) {
 
     // Loop through each character in the line
     for (let j = 0; j < line.length; j++) {
+      let char = line[j];
+
+      // Ignore whitespace characters: space, tab, and newline
+      if (char === ' ' || char === '\t' || char === '\n') {
+        continue; // Skip whitespace
+      }
+
       // Handle comments: if we encounter "//", ignore the rest of the line
-      if (line[j] === '/' && line[j + 1] === '/') {
+      if (char === '/' && line[j + 1] === '/') {
         break; // Ignore the rest of the line
       }
 
       // Check for specific characters (parentheses, braces, commas, etc.)
-      switch (line[j]) {
+      switch (char) {
         case '(':
           console.log("LEFT_PAREN ( null");
           break;
@@ -117,7 +124,7 @@ if (fileContent.length === 0) {
           break;
         // Handle unexpected characters
         default:
-          console.error(`[line ${i + 1}] Error: Unexpected character: ${line[j]}`);
+          console.error(`[line ${i + 1}] Error: Unexpected character: ${char}`);
           hadError = true;
       }
     }
@@ -132,5 +139,5 @@ if (hadError) {
   console.error("Errors were encountered. Exiting with code 65.");
   process.exit(65); // Exit with code 65 if there was an error
 } else {
-  process.exit(0); // Exit with code 0 if no errors were encountered
+  process.exit(0);
 }
