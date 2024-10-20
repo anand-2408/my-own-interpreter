@@ -87,6 +87,23 @@ if (fileContent.length === 0) {
             console.log("BANG ! null");
           }
           break;
+        // Add relational operators here
+        case '<':
+          if (lines[i][j + 1] === '=') {
+            console.log("LESS_EQUAL <= null");
+            j++; // Move past the second '='
+          } else {
+            console.log("LESS < null");
+          }
+          break;
+        case '>':
+          if (lines[i][j + 1] === '=') {
+            console.log("GREATER_EQUAL >= null");
+            j++; // Move past the second '='
+          } else {
+            console.log("GREATER > null");
+          }
+          break;
         // Handle unexpected characters
         default:
           console.error(`[line ${i + 1}] Error: Unexpected character: ${lines[i][j]}`);
@@ -104,6 +121,5 @@ if (hadError) {
   console.error("Errors were encountered. Exiting with code 65.");
   process.exit(65); // Exit with code 65 if there was an error
 } else {
-  console.error("No errors encountered. Exiting with code 0.");
-  process.exit(0);  // Exit with code 0 if no error
+  process.exit(0); // Exit with code 0 if no errors were encountered
 }
