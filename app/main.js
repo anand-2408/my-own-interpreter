@@ -137,8 +137,8 @@ if (fileContent.length === 0) {
 
             // Capture the entire number lexeme
             const numberLiteral = lines[i].substring(start, j);
-            // Use the numberLiteral directly for the literal value
-            console.log(`NUMBER ${numberLiteral} ${numberLiteral}`);
+            const literalValue = numberLiteral.includes('.') ? numberLiteral : numberLiteral + '.0';
+            console.log(`NUMBER ${numberLiteral} ${literalValue}`);
             j--; // Adjust index because for loop will increment it
             continue;
           }
