@@ -3,6 +3,7 @@ import fs from "fs";
 // Get the command-line arguments, ignoring the first two (node path and script path)
 const args = process.argv.slice(2);
 
+// Ensure that the correct number of arguments is provided
 if (args.length < 2) {
   console.error("Usage: ./your_program.sh tokenize <filename>");
   process.exit(1);
@@ -10,85 +11,42 @@ if (args.length < 2) {
 
 const command = args[0];
 
+// Check if the provided command is "tokenize"
 if (command !== "tokenize") {
   console.error(`Unknown command: ${command}`);
   process.exit(1);
 }
 
-console.error("Logs from your program will appear here!");
+console.error("Logs from your program will appear here!"); // Debugging message
 
+// Get the filename from the second argument
 const filename = args[1];
+
+// Read the content of the file
 const fileContent = fs.readFileSync(filename, "utf8");
 
+// Initialize error tracking variable
 let hadError = false;
 
+// Check if the file is empty and print EOF if it is
 if (fileContent.length === 0) {
   console.log("EOF  null");
 } else {
+  // Split the file content into lines
   let lines = fileContent.split('\n');
-
+  
+  // Loop through each line
   for (let i = 0; i < lines.length; i++) {
-    let line = lines[i];
-    let insideString = false;
-    let stringContent = '';
+    // Loop through each character in the line
+    for (let j = 0; j < lines[i].length; j++) {
+      const char = lines[i][j];
 
-    for (let j = 0; j < line.length; j++) {
-      let char = line[j];
-
-      if (char === ' ' || char === '\t' || char === '\n') {
-        if (!insideString) {
-          continue;
-        }
-      }
-
-      if (char === '"') {
-        if (insideString) {
-          console.log(`STRING "${stringContent}" ${stringContent}`);
-          insideString = false;
-        } else {
-          insideString = true;
-          stringContent = '';
-        }
+      // Ignore whitespace characters
+      if (/\s/.test(char)) {
         continue;
       }
 
-      if (insideString) {
-        stringContent += char;
-        if (j === line.length - 1 && insideString) {
-          console.error(`[line ${i + 1}] Error: Unterminated string.`);
-          hadError = true;
-        }
-        continue;
-      }
-
-      if (char === '/' && line[j + 1] === '/' && !insideString) {
-        break;
-      }
-
-      // Handle numbers
-      if (isDigit(char)) {
-        let start = j;
-        while (j < line.length && isDigit(line[j])) {
-          j++;
-        }
-
-        let numberLiteral;
-        if (line[j] === '.' && isDigit(line[j + 1])) {
-          j++;
-          while (j < line.length && isDigit(line[j])) {
-            j++;
-          }
-          numberLiteral = line.substring(start, j); // Floating-point number
-        } else {
-          numberLiteral = line.substring(start, j); // Integer number
-          numberLiteral += ".0"; // Format the integer to a float
-        }
-
-        console.log(`NUMBER ${numberLiteral} ${parseFloat(numberLiteral)}`);
-        j--; // Adjust index because for loop will increment it
-        continue;
-      }
-
+      // Check for specific characters (tokens)
       switch (char) {
         case '(':
           console.log("LEFT_PAREN ( null");
@@ -121,56 +79,69 @@ if (fileContent.length === 0) {
           console.log("STAR * null");
           break;
         case '/':
+          // Handle comments
+          if (lines[i][j + 1] === '/') {
+            break; // Ignore the rest of the line
+          }
           console.log("SLASH / null");
           break;
         case '=':
-          if (line[j + 1] === '=') {
-            console.log("EQUAL_EQUAL == null");
-            j++;
-          } else {
-            console.log("EQUAL = null");
-          }
+          console.log("EQUAL = null");
           break;
         case '!':
-          if (line[j + 1] === '=') {
-            console.log("BANG_EQUAL != null");
-            j++;
-          } else {
-            console.log("BANG ! null");
-          }
+          console.log("BANG ! null");
           break;
         case '<':
-          if (line[j + 1] === '=') {
-            console.log("LESS_EQUAL <= null");
-            j++;
-          } else {
-            console.log("LESS < null");
-          }
+          console.log("LESS < null");
           break;
         case '>':
-          if (line[j + 1] === '=') {
-            console.log("GREATER_EQUAL >= null");
-            j++;
-          } else {
-            console.log("GREATER > null");
-          }
+          console.log("GREATER > null");
           break;
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+          let start = j;
+          while (j < lines[i].length && /\d/.test(lines[i][j])) {
+            j++;
+          }
+
+          let numberLiteral;
+          if (lines[i][j] === '.' && /\d/.test(lines[i][j + 1])) {
+            j++;
+            while (j < lines[i].length && /\d/.test(lines[i][j])) {
+              j++;
+            }
+            numberLiteral = lines[i].substring(start, j); // Floating-point number
+            console.log(`NUMBER ${numberLiteral} ${numberLiteral}`); // Print floating-point number
+          } else {
+            numberLiteral = lines[i].substring(start, j); // Integer number
+            let literalValue = `${numberLiteral}.0`; // Ensure the literal has .0
+            console.log(`NUMBER ${numberLiteral} ${literalValue}`); // Print without decimal point for integer
+          }
+          j--; // Adjust index because for loop will increment it
+          continue;
         default:
+          // Handle unexpected characters
           console.error(`[line ${i + 1}] Error: Unexpected character: ${char}`);
           hadError = true;
       }
     }
   }
 
+  // After processing all the characters, print the EOF token
   console.log("EOF  null");
 }
 
+// Exit with error code if there were any errors
 if (hadError) {
   process.exit(65);
 } else {
   process.exit(0);
-}
-
-function isDigit(char) {
-  return char >= '0' && char <= '9';
 }
