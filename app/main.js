@@ -34,6 +34,8 @@ function match(nextChar) {
   return false;
 }
 
+let hadError = false;  // Track if any error occurs
+
 // Check if the file is empty and print EOF if it is
 if (fileContent.length === 0) {
   console.log("EOF  null");
@@ -93,10 +95,17 @@ if (fileContent.length === 0) {
       default:
         // Handle invalid characters
         console.error(`[line 1] Error: Unexpected character: ${char}`);
-        process.exitCode = 65; // Set exit code to 65 if there are errors
+        hadError = true;  // Mark that an error has occurred
     }
   }
 
   // After processing all characters, print the EOF token
   console.log("EOF  null");
+}
+
+// If there were any errors, set the exit code to 65
+if (hadError) {
+  process.exitCode = 65;
+} else {
+  process.exit(0);  // Exit with 0 if there were no errors
 }
