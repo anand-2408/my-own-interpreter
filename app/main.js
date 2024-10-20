@@ -1,95 +1,60 @@
-import fs from "fs";
-
-// Get the command-line arguments, ignoring the first two (node path and script path)
-const args = process.argv.slice(2);
-
-// Ensure that the correct number of arguments is provided
-if (args.length < 2) {
-  console.error("Usage: ./your_program.sh tokenize <filename>");
-  process.exit(1);
-}
-
-const command = args[0];
-
-// Check if the provided command is "tokenize"
-if (command !== "tokenize") {
-  console.error(`Unknown command: ${command}`);
-  process.exit(1);
-}
-
-console.error("Logs from your program will appear here!"); // Debugging message
-
-// Get the filename from the second argument
-const filename = args[1];
-
-// Read the content of the file
-const fileContent = fs.readFileSync(filename, "utf8");
-
-// Check if the file is empty and print EOF if it is
-if (fileContent.length === 0) {
-  console.log("EOF  null");
-  process.exit(0);
-} 
-
-// Split the file content into lines
+// Importing necessary modules
+import { readFileSync } from 'fs';
+// Reading the file content from the third command-line argument
+const fileContent = readFileSync(process.argv[3], 'utf-8');
+// Splitting the file content into lines (for now, we handle only line 1)
 let lines = fileContent.split('\n');
-let hasError = false;  // To track if any errors occur
-
-// Loop through each line
-for (let i = 0; i < lines.length; i++) {
-  // Loop through each character in the line
-  for (let j = 0; j < lines[i].length; j++) {
-    const char = lines[i][j];
-
-    // Check for specific characters (parentheses, braces, commas, etc.)
-    switch (char) {
-      case '(':
-        console.log("LEFT_PAREN ( null");
-        break;
-      case ')':
-        console.log("RIGHT_PAREN ) null");
-        break;
-      case '{':
-        console.log("LEFT_BRACE { null");
-        break;
-      case '}':
-        console.log("RIGHT_BRACE } null");
-        break;
-      case ',':
-        console.log("COMMA , null");
-        break;
-      case '.':
-        console.log("DOT . null");
-        break;
-      case '-':
-        console.log("MINUS - null");
-        break;
-      case '+':
-        console.log("PLUS + null");
-        break;
-      case ';':
-        console.log("SEMICOLON ; null");
-        break;
-      case '*':
-        console.log("STAR * null");
-        break;
-      
-      // Handle unexpected characters
-      default:
-        if (!/[\s]/.test(char)) {  // Ignore spaces
-          console.error(`[line 1] Error: Unexpected character: ${char}`);
-          hasError = true;  // Mark that we encountered an error
-        }
+// Initialize an empty string to store valid tokens
+let token = "";
+// Track whether there is an error
+let hasError = false;
+// Iterating over each character in the first line
+for (let j = 0; j < lines[0].length; j++) {
+  let ch = lines[0][j]; // Get the current character
+  // Check the character and append the appropriate token or error
+  if (ch == '(') {
+  // Check for '==' (EQUAL_EQUAL) by looking ahead
+  if (ch == '=') {
+    if (j + 1 < lines[0].length && lines[0][j + 1] == '=') {
+      token += 'EQUAL_EQUAL == null\n';
+      j++; // Skip the next character as part of '=='
+    } else {
+      token += 'EQUAL = null\n';
     }
+  } else if (ch == '(') {
+    token += 'LEFT_PAREN ( null\n';
+  } else if (ch == ')') {
+    token += 'RIGHT_PAREN ) null\n';
+  } else if (ch == '{') {
+    token += 'LEFT_BRACE { null\n';
+  } else if (ch == '}') {
+    token += 'RIGHT_BRACE } null\n';
+  } else if (ch == '*') {
+    token += 'STAR * null\n';
+  } else if (ch == '.') {
+    token += 'DOT . null\n';
+  } else if (ch == ',') {
+    token += 'COMMA , null\n';
+  } else if (ch == '+') {
+    token += 'PLUS + null\n';
+  } else if (ch == '-') {
+    token += 'MINUS - null\n';
+  } else if (ch == ';') {
+    token += 'SEMICOLON ; null\n';
+  } else {
+    // Print the error to stderr for an unexpected character
+    console.error(`[line 1] Error: Unexpected character: ${ch}`);
+    hasError = true; // Flag that an error occurred
   }
 }
-
-// After processing all the characters, print the EOF token
-console.log("EOF  null");
-
-// Exit with code 65 if there was an error, otherwise exit with code 0
+// Append the EOF (End of File) token at the end
+token += "EOF  null\n";
+// Output the valid token list to stdout
+console.log(token);
+// Exit with code 65 if any errors were detected
 if (hasError) {
   process.exit(65);
 } else {
   process.exit(0);
+}
 }
