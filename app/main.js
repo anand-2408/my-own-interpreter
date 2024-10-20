@@ -17,146 +17,173 @@ if (command !== "tokenize") {
   process.exit(1);
 }
 
-console.error("Logs from your program will appear here!"); // Debugging message
-
 // Get the filename from the second argument
 const filename = args[1];
 
 // Read the content of the file
 const fileContent = fs.readFileSync(filename, "utf8");
 
-// Initialize error tracking variable
-let hadError = false;
+// Initialize variables for scanning
+let current = 0; // Current character index
+let line = 1; // Current line number
+let hadError = false; // Track if any unexpected characters are encountered
+
+// Function to log errors
+function error(line, message) {
+  console.error(`[line ${line}] Error: ${message}`);
+  hadError = true;
+}
 
 // Function to check if a character is a digit
-const isDigit = (char) => char >= '0' && char <= '9';
+function isDigit(c) {
+  return c >= '0' && c <= '9';
+}
 
-// Check if the file is empty and print EOF if it is
-if (fileContent.length === 0) {
-  console.log("EOF  null");
-} else {
-  // Split the file content into lines
-  let lines = fileContent.split('\n');
+// Function to tokenize the input
+function scanTokens() {
+  const tokens = [];
 
-  // Loop through each line
-  for (let i = 0; i < lines.length; i++) {
-    // Loop through each character in the line
-    for (let j = 0; j < lines[i].length; j++) {
-      const char = lines[i][j];
-
-      // Ignore whitespace characters
-      if (/\s/.test(char)) {
-        continue;
-      }
-
-      // Check for specific characters (tokens)
-      switch (char) {
-        case '(':
-          console.log("LEFT_PAREN ( null");
-          break;
-        case ')':
-          console.log("RIGHT_PAREN ) null");
-          break;
-        case '{':
-          console.log("LEFT_BRACE { null");
-          break;
-        case '}':
-          console.log("RIGHT_BRACE } null");
-          break;
-        case ',':
-          console.log("COMMA , null");
-          break;
-        case '.':
-          console.log("DOT . null");
-          break;
-        case '-':
-          console.log("MINUS - null");
-          break;
-        case '+':
-          console.log("PLUS + null");
-          break;
-        case ';':
-          console.log("SEMICOLON ; null");
-          break;
-        case '*':
-          console.log("STAR * null");
-          break;
-        case '/':
-          // Handle comments
-          if (lines[i][j + 1] === '/') {
-            break; // Ignore the rest of the line
-          }
-          console.log("SLASH / null");
-          break;
-        case '=':
-          console.log("EQUAL = null");
-          break;
-        case '!':
-          // Handle the possibility of a BANG_EQUAL token
-          if (lines[i][j + 1] === '=') {
-            console.log("BANG_EQUAL != null");
-            j++; // Advance to skip the '='
-          } else {
-            console.log("BANG ! null");
-          }
-          break;
-        case '<':
-          console.log("LESS < null");
-          break;
-        case '>':
-          console.log("GREATER > null");
-          break;
-        case '"':
-          // Handle string literals
-          let start = j;
-          j++; // Skip the opening quote
-          while (j < lines[i].length && lines[i][j] !== '"') {
-            j++;
-          }
-          if (j === lines[i].length) {
-            console.error(`[line ${i + 1}] Error: Unterminated string.`);
-            hadError = true;
-            break;
-          }
-          const stringLiteral = lines[i].substring(start, j + 1);
-          const stringValue = lines[i].substring(start + 1, j);
-          console.log(`STRING ${stringLiteral} ${stringValue}`);
-          continue;
-
-        default:
-          // Handle numbers
-          if (isDigit(char)) {
-            let start = j;
-            while (isDigit(lines[i][j])) j++;
-            
-            // Look for a fractional part
-            if (lines[i][j] === '.' && isDigit(lines[i][j + 1])) {
-              j++; // Consume the decimal point
-              while (isDigit(lines[i][j])) j++;
-            }
-
-            // Capture the entire number lexeme
-            const numberLiteral = lines[i].substring(start, j);
-            const literalValue = numberLiteral.includes('.') ? numberLiteral : numberLiteral + '.0';
-            console.log(`NUMBER ${numberLiteral} ${literalValue}`);
-            j--; // Adjust index because for loop will increment it
-            continue;
-          }
-
-          // Handle unexpected characters
-          console.error(`[line ${i + 1}] Error: Unexpected character: ${char}`);
-          hadError = true;
-      }
-    }
+  while (!isAtEnd()) {
+    start = current; // Mark the start of the token
+    scanToken(tokens); // Scan the next token
   }
 
-  // After processing all the characters, print the EOF token
-  console.log("EOF  null");
+  tokens.push({ type: 'EOF', lexeme: '', literal: null });
+  return tokens;
 }
 
-// Exit with error code if there were any errors
-if (hadError) {
-  process.exit(65);
-} else {
-  process.exit(0);
+// Function to scan a single token
+function scanToken(tokens) {
+  const c = advance();
+
+  switch (c) {
+    case '(':
+      tokens.push({ type: 'LEFT_PAREN', lexeme: '(', literal: null });
+      break;
+    case ')':
+      tokens.push({ type: 'RIGHT_PAREN', lexeme: ')', literal: null });
+      break;
+    case '{':
+      tokens.push({ type: 'LEFT_BRACE', lexeme: '{', literal: null });
+      break;
+    case '}':
+      tokens.push({ type: 'RIGHT_BRACE', lexeme: '}', literal: null });
+      break;
+    case ',':
+      tokens.push({ type: 'COMMA', lexeme: ',', literal: null });
+      break;
+    case '.':
+      tokens.push({ type: 'DOT', lexeme: '.', literal: null });
+      break;
+    case '-':
+      tokens.push({ type: 'MINUS', lexeme: '-', literal: null });
+      break;
+    case '+':
+      tokens.push({ type: 'PLUS', lexeme: '+', literal: null });
+      break;
+    case ';':
+      tokens.push({ type: 'SEMICOLON', lexeme: ';', literal: null });
+      break;
+    case '*':
+      tokens.push({ type: 'STAR', lexeme: '*', literal: null });
+      break;
+    case '/':
+      tokens.push({ type: 'SLASH', lexeme: '/', literal: null });
+      break;
+    case '!':
+      tokens.push({ type: 'BANG', lexeme: '!', literal: null });
+      break;
+    case '=':
+      tokens.push({ type: 'EQUAL', lexeme: '=', literal: null });
+      break;
+    case ' ':
+    case '\r':
+    case '\t':
+      // Ignore whitespace
+      break;
+    case '\n':
+      line++; // Increment line number on newline
+      break;
+    default:
+      if (isDigit(c)) {
+        number(tokens);
+      } else if (c === '"') {
+        string(tokens);
+      } else {
+        error(line, `Unexpected character: ${c}`);
+      }
+      break;
+  }
 }
+
+// Function to advance the current character
+function advance() {
+  return source.charAt(current++);
+}
+
+// Function to check if we've reached the end of the input
+function isAtEnd() {
+  return current >= source.length;
+}
+
+// Function to scan for number literals
+function number(tokens) {
+  while (isDigit(peek())) advance();
+
+  // Look for a fractional part.
+  if (peek() === '.' && isDigit(peekNext())) {
+    // Consume the "."
+    advance();
+
+    while (isDigit(peek())) advance();
+  }
+
+  const numberLiteral = source.substring(start, current);
+  const literalValue = numberLiteral.includes('.')
+    ? parseFloat(numberLiteral).toString() // Convert to number and back to string to remove trailing zeros
+    : numberLiteral + '.0'; // Append .0 for integers
+  
+  tokens.push({ type: 'NUMBER', lexeme: numberLiteral, literal: literalValue });
+}
+
+// Function to scan for string literals
+function string(tokens) {
+  let value = '';
+  
+  while (peek() !== '"' && !isAtEnd()) {
+    if (peek() === '\n') line++;
+    value += advance();
+  }
+
+  if (isAtEnd()) {
+    error(line, "Unterminated string.");
+    return;
+  }
+
+  // Consume the closing "
+  advance();
+  
+  tokens.push({ type: 'STRING', lexeme: `"${value}"`, literal: value });
+}
+
+// Function to peek at the next character
+function peek() {
+  return isAtEnd() ? '\0' : source.charAt(current);
+}
+
+// Function to peek at the next character
+function peekNext() {
+  if (current + 1 >= source.length) return '\0';
+  return source.charAt(current + 1);
+}
+
+// Run the tokenizer
+const tokens = scanTokens();
+
+// Output the tokens
+for (const token of tokens) {
+  console.log(`${token.type} ${token.lexeme} ${token.literal}`);
+}
+
+// Exit with the appropriate code
+process.exit(hadError ? 65 : 0);
