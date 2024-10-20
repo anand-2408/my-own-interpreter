@@ -136,7 +136,7 @@ function isAtEnd() {
 // Function to scan for number literals
 function number(tokens) {
   let isFractional = false;
-  
+
   while (isDigit(peek())) advance();
 
   // Check for a fractional part.
@@ -152,10 +152,10 @@ function number(tokens) {
   let literalValue;
 
   if (isFractional) {
-    // For fractional numbers, use the original literal
+    // For fractional numbers, just use the original literal
     literalValue = numberLiteral;
   } else {
-    // For integers, always format it as x.0
+    // For integers, format it as x.0
     literalValue = parseFloat(numberLiteral).toFixed(1); // Ensures it has one decimal place
   }
 
