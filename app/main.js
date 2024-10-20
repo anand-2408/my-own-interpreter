@@ -142,16 +142,17 @@ function number(tokens) {
     advance();
 
     while (isDigit(peek())) advance();
-  } else if (peek() === '.') {
-    // If we hit a dot without digits after it, return a DOT token
-    tokens.push({ type: 'DOT', lexeme: '.', literal: null });
-    return; // Exit early for this case
   }
 
   const numberLiteral = source.substring(start, current);
-  const literalValue = numberLiteral.includes('.')
-    ? parseFloat(numberLiteral).toString() // Keep as is for decimals
-    : numberLiteral + '.0'; // Append .0 for integers
+  let literalValue;
+
+  // Ensure integer literals have ".0" appended and decimal literals keep their value
+  if (numberLiteral.includes('.')) {
+    literalValue = numberLiteral; // Keep the original decimal value
+  } else {
+    literalValue = numberLiteral + '.0'; // Append .0 for integers
+  }
 
   tokens.push({ type: 'NUMBER', lexeme: numberLiteral, literal: literalValue });
 }
