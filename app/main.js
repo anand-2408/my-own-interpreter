@@ -75,7 +75,11 @@ function scanToken(tokens) {
       tokens.push({ type: 'COMMA', lexeme: ',', literal: null });
       break;
     case '.':
-      tokens.push({ type: 'DOT', lexeme: '.', literal: null });
+      if (isDigit(peekNext())) { // If the next character is a digit, it's part of a number
+        number(tokens);
+      } else {
+        tokens.push({ type: 'DOT', lexeme: '.', literal: null });
+      }
       break;
     case '-':
       tokens.push({ type: 'MINUS', lexeme: '-', literal: null });
@@ -138,17 +142,16 @@ function number(tokens) {
     advance();
 
     while (isDigit(peek())) advance();
+  } else if (peek() === '.') {
+    // If we hit a dot without digits after it, return a DOT token
+    tokens.push({ type: 'DOT', lexeme: '.', literal: null });
+    return; // Exit early for this case
   }
 
   const numberLiteral = source.substring(start, current);
-  let literalValue;
-
-  // Ensure there's at least one digit after the decimal point
-  if (numberLiteral.includes('.')) {
-    literalValue = parseFloat(numberLiteral).toFixed(3).replace(/\.0+$/, ''); // Keep up to three decimal places, remove trailing zeros
-  } else {
-    literalValue = parseFloat(numberLiteral).toFixed(1); // For integers, ensure one digit after decimal
-  }
+  const literalValue = numberLiteral.includes('.')
+    ? parseFloat(numberLiteral).toString() // Keep as is for decimals
+    : numberLiteral + '.0'; // Append .0 for integers
 
   tokens.push({ type: 'NUMBER', lexeme: numberLiteral, literal: literalValue });
 }
