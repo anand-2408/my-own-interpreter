@@ -75,8 +75,9 @@ function scanToken(tokens) {
       tokens.push({ type: 'COMMA', lexeme: ',', literal: null });
       break;
     case '.':
-      if (isDigit(peekNext())) { // If the next character is a digit, it's part of a number
-        number(tokens);
+      // Check for number literals starting with a dot
+      if (isDigit(peekNext())) {
+        number(tokens); // Handle numbers like ".456"
       } else {
         tokens.push({ type: 'DOT', lexeme: '.', literal: null });
       }
@@ -147,14 +148,16 @@ function number(tokens) {
   const numberLiteral = source.substring(start, current);
   let literalValue;
 
-  // Format the literal value to remove unnecessary trailing zeros
+  // Handle formatting for literal value
   if (numberLiteral.includes('.')) {
-    // Use parseFloat to get the numeric value and then toString to convert back
-    literalValue = parseFloat(numberLiteral).toFixed(1); // Ensure one digit after decimal
+    // Preserve the exact format for decimal numbers
+    literalValue = numberLiteral;
   } else {
-    literalValue = numberLiteral + '.0'; // Append .0 for integers
+    // If it's an integer, ensure it has .0
+    literalValue = numberLiteral + '.0';
   }
 
+  // Push the token with the correct lexeme and literal
   tokens.push({ type: 'NUMBER', lexeme: numberLiteral, literal: literalValue });
 }
 
