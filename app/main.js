@@ -42,7 +42,7 @@ const keywords = {
 // Helper functions
 const isAlpha = (c) => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c === '_';
 const isDigit = (c) => c >= '0' && c <= '9';
-const isAlphaNumeric = (c) => isAlpha(c) || isDigit(c) || c === '/';
+const isAlphaNumeric = (c) => isAlpha(c) || isDigit(c) || c === '/' || c === '_'; // Temporarily allow '/' in identifiers
 
 if (fileContent.length !== 0) {
   const lines = fileContent.split("\n");
@@ -159,14 +159,7 @@ if (fileContent.length !== 0) {
             }
             const numberString = line.slice(startDigit, i);
             const num = parseFloat(numberString);
-
-            // Check if the number is an integer and format accordingly
-            if (Number.isInteger(num)) {
-              tokens.push(`NUMBER ${numberString} ${num.toFixed(1)}`);
-            } else {
-              tokens.push(`NUMBER ${numberString} ${num}`);
-            }
-
+            tokens.push(`NUMBER ${numberString} ${num.toString()}`);
             i--; // Adjust index after parsing
           } else {
             console.error(`[line ${lineNumber + 1}] Error: Unexpected character: ${ch}`);
