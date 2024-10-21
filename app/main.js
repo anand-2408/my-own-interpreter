@@ -49,113 +49,134 @@ if (fileContent.length !== 0) {
       let ch = line[i];
 
       // Token for each character
-      if (ch === '(') {
-        tokens += 'LEFT_PAREN ( null\n';
-      } else if (ch === ')') {
-        tokens += 'RIGHT_PAREN ) null\n';
-      } else if (ch === '{') {
-        tokens += 'LEFT_BRACE { null\n';
-      } else if (ch === '}') {
-        tokens += 'RIGHT_BRACE } null\n';
-      } else if (ch === ',') {
-        tokens += 'COMMA , null\n';
-      } else if (ch === '.') {
-        tokens += 'DOT . null\n';
-      } else if (ch === '-') {
-        tokens += 'MINUS - null\n';
-      } else if (ch === '+') {
-        tokens += 'PLUS + null\n';
-      } else if (ch === ';') {
-        tokens += 'SEMICOLON ; null\n';
-      } else if (ch === '*') {
-        tokens += 'STAR * null\n';
-      } else if (ch === '=') {
-        if (i + 1 < line.length && line[i + 1] === '=') {
-          tokens += 'EQUAL_EQUAL == null\n';
-          i++;
-        } else {
-          tokens += 'EQUAL = null\n';
-        }
-      } else if (ch === ' ' || ch === '\t') {
-        continue; // Ignore whitespace
-      } else if (ch === '!') {
-        if (i + 1 < line.length && line[i + 1] === '=') {
-          tokens += 'BANG_EQUAL != null\n';
-          i++;
-        } else {
-          tokens += 'BANG ! null\n';
-        }
-      } else if (ch === '<') {
-        if (i + 1 < line.length && line[i + 1] === '=') {
-          tokens += 'LESS_EQUAL <= null\n';
-          i++;
-        } else {
-          tokens += 'LESS < null\n';
-        }
-      } else if (ch === '>') {
-        if (i + 1 < line.length && line[i + 1] === '=') {
-          tokens += 'GREATER_EQUAL >= null\n';
-          i++;
-        } else {
-          tokens += 'GREATER > null\n';
-        }
-      } else if (ch === '/') {
-        if (i + 1 < line.length && line[i + 1] === '/') {
-          break; // Ignore comments
-        } else {
-          tokens += 'SLASH / null\n';
-        }
-      } else if (ch === '"') {
-        // Handle string literals
-        let str = '';
-        i++;
-        while (i < line.length && line[i] !== '"') {
-          if (line[i] === '\\' && i + 1 < line.length) {
-            str += line[i] + line[i + 1];
-            i += 2;
+      switch (ch) {
+        case '(':
+          tokens += 'LEFT_PAREN ( null\n';
+          break;
+        case ')':
+          tokens += 'RIGHT_PAREN ) null\n';
+          break;
+        case '{':
+          tokens += 'LEFT_BRACE { null\n';
+          break;
+        case '}':
+          tokens += 'RIGHT_BRACE } null\n';
+          break;
+        case ',':
+          tokens += 'COMMA , null\n';
+          break;
+        case '.':
+          tokens += 'DOT . null\n';
+          break;
+        case '-':
+          tokens += 'MINUS - null\n';
+          break;
+        case '+':
+          tokens += 'PLUS + null\n';
+          break;
+        case ';':
+          tokens += 'SEMICOLON ; null\n';
+          break;
+        case '*':
+          tokens += 'STAR * null\n';
+          break;
+        case '=':
+          if (peek(line, i + 1) === '=') {
+            tokens += 'EQUAL_EQUAL == null\n';
+            i++;
           } else {
-            str += line[i++];
+            tokens += 'EQUAL = null\n';
           }
-        }
-        if (i < line.length) {
-          tokens += `STRING "${str}" ${str}\n`;
-        } else {
-          console.error(`[line ${lineNumber + 1}] Error: Unterminated string.`);
-          isError = true;
-        }
-      } else if (isAlpha(ch)) {
-        // Handle identifiers and keywords
-        const start = i;
-        while (isAlphaNumeric(peek(line, i))) {
+          break;
+        case ' ':
+        case '\t':
+          continue; // Ignore whitespace
+        case '!':
+          if (peek(line, i + 1) === '=') {
+            tokens += 'BANG_EQUAL != null\n';
+            i++;
+          } else {
+            tokens += 'BANG ! null\n';
+          }
+          break;
+        case '<':
+          if (peek(line, i + 1) === '=') {
+            tokens += 'LESS_EQUAL <= null\n';
+            i++;
+          } else {
+            tokens += 'LESS < null\n';
+          }
+          break;
+        case '>':
+          if (peek(line, i + 1) === '=') {
+            tokens += 'GREATER_EQUAL >= null\n';
+            i++;
+          } else {
+            tokens += 'GREATER > null\n';
+          }
+          break;
+        case '/':
+          if (peek(line, i + 1) === '/') {
+            break; // Ignore comments
+          } else {
+            tokens += 'SLASH / null\n';
+          }
+          break;
+        case '"':
+          // Handle string literals
+          let str = '';
           i++;
-        }
-        const identifier = line.slice(start, i);
-        const type = keywords[identifier] || "IDENTIFIER";
-        tokens += `${type} ${identifier} null\n`;
-        i--; // Adjust index after parsing
-      } else if (line[i] >= '0' && line[i] <= '9') {
-        // Handle number literals
-        const startDigit = i;
-        while (i < line.length && line[i] >= '0' && line[i] <= '9') {
-          i++;
-        }
-        if (line[i] === '.' && i + 1 < line.length && line[i + 1] >= '0' && line[i + 1] <= '9') {
-          i++;
-          while (i < line.length && line[i] >= '0' && line[i] <= '9') {
+          while (i < line.length && line[i] !== '"') {
+            if (line[i] === '\\' && i + 1 < line.length) {
+              str += line[i] + line[i + 1];
+              i++;
+            } else {
+              str += line[i];
+            }
             i++;
           }
-        }
-        const numberString = line.slice(startDigit, i);
-        i--; // Adjust index after parsing
-        const num = parseFloat(numberString);
-        if (Number.isInteger(num)) {
-          tokens += `NUMBER ${numberString} ${num.toFixed(1)}\n`;
-        } else {
-          tokens += `NUMBER ${numberString} ${numberString}\n`;
-        }
-      } else {
-        console.error(`[line ${lineNumber + 1}] Error: Unexpected character: ${ch}`);
-        isError = true;
+          if (i < line.length) {
+            tokens += `STRING "${str}" ${str}\n`;
+          } else {
+            console.error(`[line ${lineNumber + 1}] Error: Unterminated string.`);
+            isError = true;
+          }
+          break;
+        default:
+          if (isAlpha(ch)) {
+            // Handle identifiers and keywords
+            const start = i;
+            while (isAlphaNumeric(peek(line, i))) {
+              i++;
+            }
+            const identifier = line.slice(start, i);
+            const type = keywords[identifier] || "IDENTIFIER";
+            tokens += `${type} ${identifier} null\n`;
+            i--; // Adjust index after parsing
+          } else if (isDigit(ch)) {
+            // Handle number literals
+            const startDigit = i;
+            while (isDigit(peek(line, i))) {
+              i++;
+            }
+            if (peek(line, i) === '.' && peek(line, i + 1) >= '0' && peek(line, i + 1) <= '9') {
+              i++;
+              while (isDigit(peek(line, i))) {
+                i++;
+              }
+            }
+            const numberString = line.slice(startDigit, i);
+            i--; // Adjust index after parsing
+            const num = parseFloat(numberString);
+            if (Number.isInteger(num)) {
+              tokens += `NUMBER ${numberString} ${num.toFixed(1)}\n`;
+            } else {
+              tokens += `NUMBER ${numberString} ${numberString}\n`;
+            }
+          } else {
+            console.error(`[line ${lineNumber + 1}] Error: Unexpected character: ${ch}`);
+            isError = true;
+          }
       }
     }
   }
