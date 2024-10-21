@@ -24,9 +24,11 @@ const filename = args[1];
 const fileContent = fs.readFileSync(filename, "utf8");
 
 // Initialize variables for scanning
+let source = fileContent;  // Assign file content to source
 let current = 0; // Current character index
 let line = 1; // Current line number
 let hadError = false; // Track if any unexpected characters are encountered
+let start = 0;  // Track the start index of the current token
 
 // Function to log errors
 function error(line, message) {
