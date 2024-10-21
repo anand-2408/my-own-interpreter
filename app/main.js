@@ -42,7 +42,7 @@ const keywords = {
 // Helper functions
 const isAlpha = (c) => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c === '_';
 const isDigit = (c) => c >= '0' && c <= '9';
-const isAlphaNumeric = (c) => isAlpha(c) || isDigit(c) || c === '/' || c === '_'; // Temporarily allow '/' in identifiers
+const isAlphaNumeric = (c) => isAlpha(c) || isDigit(c);
 
 if (fileContent.length !== 0) {
   const lines = fileContent.split("\n");
@@ -153,13 +153,20 @@ if (fileContent.length !== 0) {
           } else if (isDigit(ch)) {
             const startDigit = i;
             while (isDigit(line[++i])) {}
+            
+            let isFloat = false;
             if (line[i] === '.' && isDigit(line[i + 1])) {
+              isFloat = true;
               i++;
               while (isDigit(line[++i])) {}
             }
+            
             const numberString = line.slice(startDigit, i);
             const num = parseFloat(numberString);
-            tokens.push(`NUMBER ${numberString} ${num.toString()}`);
+            
+            // Ensure the number is printed as a float with .0 if it is an integer
+            const outputNumber = isFloat || numberString.includes('.') ? num.toString() : num.toFixed(1);
+            tokens.push(`NUMBER ${numberString} ${outputNumber}`);
             i--; // Adjust index after parsing
           } else {
             console.error(`[line ${lineNumber + 1}] Error: Unexpected character: ${ch}`);
