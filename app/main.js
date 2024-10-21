@@ -24,11 +24,9 @@ const filename = args[1];
 const fileContent = fs.readFileSync(filename, "utf8");
 
 // Initialize variables for scanning
-let source = fileContent; // Store the content to be tokenized
 let current = 0; // Current character index
 let line = 1; // Current line number
 let hadError = false; // Track if any unexpected characters are encountered
-let start = 0; // Track the start index of the current token
 
 // Function to log errors
 function error(line, message) {
@@ -75,12 +73,7 @@ function scanToken(tokens) {
       tokens.push({ type: 'COMMA', lexeme: ',', literal: null });
       break;
     case '.':
-      // Check for number literals starting with a dot
-      if (isDigit(peekNext())) {
-        number(tokens); // Handle numbers like ".456"
-      } else {
-        tokens.push({ type: 'DOT', lexeme: '.', literal: null });
-      }
+      tokens.push({ type: 'DOT', lexeme: '.', literal: null });
       break;
     case '-':
       tokens.push({ type: 'MINUS', lexeme: '-', literal: null });
@@ -134,43 +127,24 @@ function isAtEnd() {
 }
 
 // Function to scan for number literals
-// Function to scan for number literals
-// Function to scan for number literals
 function number(tokens) {
-  let isFractional = false;
-
-  // Scan the integer part of the number
   while (isDigit(peek())) advance();
 
-  // Check for a fractional part (a dot followed by digits)
+  // Look for a fractional part.
   if (peek() === '.' && isDigit(peekNext())) {
-    isFractional = true;
-    advance(); // Consume the "."
+    // Consume the "."
+    advance();
 
-    // Scan the fractional part of the number
     while (isDigit(peek())) advance();
   }
 
-  const numberLiteral = source.substring(start, current); // Lexeme (exact matched characters)
-  let literalValue;
-
-  if (isFractional) {
-    // For fractional numbers, just use the parsed float value
-    literalValue = parseFloat(numberLiteral);
-  } else {
-    // For integers, we format the literal as x.0
-    literalValue = parseFloat(numberLiteral).toFixed(1);
-  }
-
-  // Push the token with the correct lexeme and literal
-  tokens.push({
-    type: 'NUMBER',
-    lexeme: numberLiteral,
-    literal: literalValue
-  });
+  const numberLiteral = source.substring(start, current);
+  const literalValue = numberLiteral.includes('.')
+    ? parseFloat(numberLiteral).toString() // Convert to number and back to string to remove trailing zeros
+    : numberLiteral + '.0'; // Append .0 for integers
+  
+  tokens.push({ type: 'NUMBER', lexeme: numberLiteral, literal: literalValue });
 }
-
-
 
 // Function to scan for string literals
 function string(tokens) {
