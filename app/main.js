@@ -146,8 +146,9 @@ function number(tokens) {
   
   let literalValue;
   if (isFraction) {
-    // If it's a fractional number, preserve it as is
-    literalValue = numberLiteral;
+    // If it's a fractional number, check for trailing zeros after the decimal
+    const numberAsFloat = parseFloat(numberLiteral); // This removes trailing zeros
+    literalValue = numberAsFloat.toString(); // Convert back to string
   } else {
     // For whole numbers, append .0
     literalValue = numberLiteral + ".0";
