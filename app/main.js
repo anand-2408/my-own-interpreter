@@ -42,7 +42,7 @@ const keywords = {
 // Helper functions
 const isAlpha = (c) => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c === '_';
 const isDigit = (c) => c >= '0' && c <= '9';
-const isAlphaNumeric = (c) => isAlpha(c) || isDigit(c);
+const isAlphaNumeric = (c) => isAlpha(c) || isDigit(c) || c === '/';
 
 if (fileContent.length !== 0) {
   const lines = fileContent.split("\n");
