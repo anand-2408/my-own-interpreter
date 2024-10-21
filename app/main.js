@@ -134,6 +134,7 @@ function isAtEnd() {
 }
 
 // Function to scan for number literals
+// Function to scan for number literals
 function number(tokens) {
   let isFractional = false;
 
@@ -153,15 +154,21 @@ function number(tokens) {
 
   if (isFractional) {
     // For fractional numbers, just use the original literal
-    literalValue = numberLiteral;
+    literalValue = parseFloat(numberLiteral);
   } else {
     // For integers, format it as x.0
-    literalValue = parseFloat(numberLiteral).toFixed(1); // Converts to float and ensures one decimal
+    literalValue = parseFloat(numberLiteral).toFixed(1); // Convert to float and ensure one decimal place
+  }
+
+  // Ensure only `x.0` for integers and avoid trailing zeros
+  if (!isFractional) {
+    literalValue = parseFloat(literalValue);  // Convert back to avoid unnecessary `.0`
   }
 
   // Push the token with the correct lexeme and literal
   tokens.push({ type: 'NUMBER', lexeme: numberLiteral, literal: literalValue });
 }
+
 
 // Function to scan for string literals
 function string(tokens) {
