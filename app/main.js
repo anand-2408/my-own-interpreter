@@ -19,10 +19,30 @@ const fileContent = fs.readFileSync(filename, "utf8");
 let tokens = '';
 let isError = false;
 
+// Reserved keywords mapping
+const keywords = {
+  "and": "AND",
+  "class": "CLASS",
+  "else": "ELSE",
+  "false": "FALSE",
+  "for": "FOR",
+  "fun": "FUN",
+  "if": "IF",
+  "nil": "NIL",
+  "or": "OR",
+  "print": "PRINT",
+  "return": "RETURN",
+  "super": "SUPER",
+  "this": "THIS",
+  "true": "TRUE",
+  "var": "VAR",
+  "while": "WHILE",
+};
+
 if (fileContent.length !== 0) {
   // Split file content into lines
   let lines = fileContent.split("\n");
-  
+
   // Tokenizing the lines
   for (const [lineNumber, line] of lines.entries()) {
     for (let i = 0; i < line.length; i++) {
@@ -103,39 +123,32 @@ if (fileContent.length !== 0) {
           console.error(`[line ${lineNumber + 1}] Error: Unterminated string.`);
           isError = true;
         }
+      } else if (isAlpha(ch)) {
+        // Handle identifiers and keywords
+        const start = i;
+        while (isAlphaNumeric(peek(line, i))) advance(line, i);
+        const identifier = line.slice(start, i);
+        const type = keywords[identifier] || "IDENTIFIER";
+        tokens += `${type} ${identifier} null\n`;
       } else if (line[i] >= '0' && line[i] <= '9') {
         // Handle number literals
         const startDigit = i;
-        
-        // Parse integer part
         while (i < line.length && line[i] >= '0' && line[i] <= '9') {
           i++;
         }
-        
-        // Parse fractional part (if any)
-        let isFraction = false;
         if (line[i] === '.' && i + 1 < line.length && line[i + 1] >= '0' && line[i + 1] <= '9') {
           i++;
           while (i < line.length && line[i] >= '0' && line[i] <= '9') {
             i++;
           }
-          isFraction = true;
         }
-        
-        // Extract the number string
         const numberString = line.slice(startDigit, i);
         i--; // Adjust index after parsing
-        
-        // Convert the string to a float
         const num = parseFloat(numberString);
-        
-        // Check if it's a whole number or a fraction
         if (Number.isInteger(num)) {
-          // Whole number: append `.0`
           tokens += `NUMBER ${numberString} ${num.toFixed(1)}\n`;
         } else {
-          // Fractional number: handle trailing zeros
-          tokens += `NUMBER ${numberString} ${num}\n`;
+          tokens += `NUMBER ${numberString} ${numberString}\n`;
         }
       } else {
         console.error(`[line ${lineNumber + 1}] Error: Unexpected character: ${ch}`);
@@ -152,4 +165,25 @@ tokens += 'EOF  null\n';
 console.log(tokens);
 if (isError) {
   process.exit(65);
+}
+
+// Helper functions
+function isAlpha(c) {
+  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c === '_';
+}
+
+function isDigit(c) {
+  return c >= '0' && c <= '9';
+}
+
+function isAlphaNumeric(c) {
+  return isAlpha(c) || isDigit(c);
+}
+
+function peek(line, index) {
+  return index < line.length ? line[index] : null; // Safely peek at the character
+}
+
+function advance(line, index) {
+  return index + 1; // Advance the index
 }
