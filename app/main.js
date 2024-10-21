@@ -126,10 +126,13 @@ if (fileContent.length !== 0) {
       } else if (isAlpha(ch)) {
         // Handle identifiers and keywords
         const start = i;
-        while (isAlphaNumeric(peek(line, i))) advance(line, i);
+        while (isAlphaNumeric(peek(line, i))) {
+          i++;
+        }
         const identifier = line.slice(start, i);
         const type = keywords[identifier] || "IDENTIFIER";
         tokens += `${type} ${identifier} null\n`;
+        i--; // Adjust index after parsing
       } else if (line[i] >= '0' && line[i] <= '9') {
         // Handle number literals
         const startDigit = i;
@@ -182,8 +185,4 @@ function isAlphaNumeric(c) {
 
 function peek(line, index) {
   return index < line.length ? line[index] : null; // Safely peek at the character
-}
-
-function advance(line, index) {
-  return index + 1; // Advance the index
 }
