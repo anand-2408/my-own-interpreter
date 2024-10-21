@@ -44,9 +44,11 @@ const isAlpha = (c) => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c ===
 const isDigit = (c) => c >= '0' && c <= '9';
 const isAlphaNumeric = (c) => isAlpha(c) || isDigit(c);
 
-// Tokenizing function
+// Tokenization function
 const tokenize = (lines) => {
   for (const [lineNumber, line] of lines.entries()) {
+    if (line.trim() === '') continue; // Skip empty lines
+
     for (let i = 0; i < line.length; i++) {
       const ch = line[i];
 
@@ -63,32 +65,43 @@ const tokenize = (lines) => {
         case '+': tokens.push('PLUS + null'); break;
         case ';': tokens.push('SEMICOLON ; null'); break;
         case '*': tokens.push('STAR * null'); break;
-        case '=': tokens.push(line[i + 1] === '=' ? 'EQUAL_EQUAL == null' : 'EQUAL = null'); if (line[i + 1] === '=') i++; break;
-        case '!': tokens.push(line[i + 1] === '=' ? 'BANG_EQUAL != null' : 'BANG ! null'); if (line[i + 1] === '=') i++; break;
-        case '<': tokens.push(line[i + 1] === '=' ? 'LESS_EQUAL <= null' : 'LESS < null'); if (line[i + 1] === '=') i++; break;
-        case '>': tokens.push(line[i + 1] === '=' ? 'GREATER_EQUAL >= null' : 'GREATER > null'); if (line[i + 1] === '=') i++; break;
+        case '=': 
+          tokens.push(line[i + 1] === '=' ? 'EQUAL_EQUAL == null' : 'EQUAL = null'); 
+          if (line[i + 1] === '=') i++; 
+          break;
+        case '!': 
+          tokens.push(line[i + 1] === '=' ? 'BANG_EQUAL != null' : 'BANG ! null'); 
+          if (line[i + 1] === '=') i++; 
+          break;
+        case '<': 
+          tokens.push(line[i + 1] === '=' ? 'LESS_EQUAL <= null' : 'LESS < null'); 
+          if (line[i + 1] === '=') i++; 
+          break;
+        case '>': 
+          tokens.push(line[i + 1] === '=' ? 'GREATER_EQUAL >= null' : 'GREATER > null'); 
+          if (line[i + 1] === '=') i++; 
+          break;
         case '/':
-          if (line[i + 1] === '/') break; // Ignore comments
-          // Treat as identifier if not part of comment
-          let identifier = '';
-          while (isAlphaNumeric(line[i])) identifier += line[i++];
-          if (identifier) tokens.push(`IDENTIFIER ${identifier} null`);
-          i--; // Adjust index after parsing
+          if (line[i + 1] === '/') {
+            break; // Ignore the rest of the line as a comment
+          }
+          tokens.push('SLASH / null'); 
           break;
         case '"':
           let str = '';
           i++;
           while (i < line.length && line[i] !== '"') {
             if (line[i] === '\\' && i + 1 < line.length) {
-              str += line[i] + line[i + 1];
-              i += 2;
+              str += line[i++] + line[i];
             } else {
-              str += line[i++];
+              str += line[i];
             }
+            i++;
           }
           if (i < line.length) {
             tokens.push(`STRING "${str}" ${str}`);
           } else {
+            console.error(`[line ${lineNumber + 1}] Error: Unterminated string.`);
             isError = true;
           }
           break;
@@ -103,24 +116,22 @@ const tokenize = (lines) => {
           } else if (isDigit(ch)) {
             const startDigit = i;
             while (isDigit(line[++i])) {}
-            let isFloat = false;
             if (line[i] === '.' && isDigit(line[i + 1])) {
-              isFloat = true;
               i++;
               while (isDigit(line[++i])) {}
             }
             const numberString = line.slice(startDigit, i);
             const num = parseFloat(numberString);
-            const outputNumber = isFloat || numberString.includes('.') ? num.toString() : num.toFixed(1);
-            tokens.push(`NUMBER ${numberString} ${outputNumber}`);
+            tokens.push(`NUMBER ${numberString} ${num.toFixed(1)}`);
             i--; // Adjust index after parsing
           } else {
+            console.error(`[line ${lineNumber + 1}] Error: Unexpected character: ${ch}`);
             isError = true;
           }
       }
     }
   }
-}
+};
 
 // Tokenization
 if (fileContent.length !== 0) {
