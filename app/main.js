@@ -133,20 +133,29 @@ function number(tokens) {
   while (isDigit(peek())) advance();
 
   // Look for a fractional part.
+  let isFraction = false;
   if (peek() === '.' && isDigit(peekNext())) {
     // Consume the "."
     advance();
+    isFraction = true;  // Mark that it's a fractional number
 
     while (isDigit(peek())) advance();
   }
 
   const numberLiteral = source.substring(start, current);
-  const literalValue = numberLiteral.includes('.')
-    ? parseFloat(numberLiteral).toString() // Convert to number and back to string to remove trailing zeros
-    : numberLiteral + '.0'; // Append .0 for integers
+  
+  let literalValue;
+  if (isFraction) {
+    // Handle fractional numbers
+    literalValue = parseFloat(numberLiteral).toString(); // Convert to number and back to string to remove unnecessary zeros
+  } else {
+    // Handle whole numbers, append .0 for consistency
+    literalValue = numberLiteral + ".0";
+  }
   
   tokens.push({ type: 'NUMBER', lexeme: numberLiteral, literal: literalValue });
 }
+
 
 // Function to scan for string literals
 function string(tokens) {
