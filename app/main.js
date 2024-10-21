@@ -16,7 +16,7 @@ if (command !== "tokenize") {
 const filename = args[1];
 const fileContent = fs.readFileSync(filename, "utf8");
 
-let tokens = '';
+const tokens = [];
 let isError = false;
 
 // Reserved keywords mapping
@@ -39,150 +39,142 @@ const keywords = {
   "while": "WHILE",
 };
 
-if (fileContent.length !== 0) {
-  // Split file content into lines
-  let lines = fileContent.split("\n");
+// Helper functions
+const isAlpha = (c) => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c === '_';
+const isDigit = (c) => c >= '0' && c <= '9';
+const isAlphaNumeric = (c) => isAlpha(c) || isDigit(c);
 
-  // Tokenizing the lines
+if (fileContent.length !== 0) {
+  const lines = fileContent.split("\n");
+
   for (const [lineNumber, line] of lines.entries()) {
     for (let i = 0; i < line.length; i++) {
-      let ch = line[i];
+      const ch = line[i];
 
-      // Token for each character
-      if (ch === '(') {
-        tokens += 'LEFT_PAREN ( null\n';
-      } else if (ch === ')') {
-        tokens += 'RIGHT_PAREN ) null\n';
-      } else if (ch === '{') {
-        tokens += 'LEFT_BRACE { null\n';
-      } else if (ch === '}') {
-        tokens += 'RIGHT_BRACE } null\n';
-      } else if (ch === ',') {
-        tokens += 'COMMA , null\n';
-      } else if (ch === '.') {
-        tokens += 'DOT . null\n';
-      } else if (ch === '-') {
-        tokens += 'MINUS - null\n';
-      } else if (ch === '+') {
-        tokens += 'PLUS + null\n';
-      } else if (ch === ';') {
-        tokens += 'SEMICOLON ; null\n';
-      } else if (ch === '*') {
-        tokens += 'STAR * null\n';
-      } else if (ch === '=') {
-        if (i + 1 < line.length && line[i + 1] === '=') {
-          tokens += 'EQUAL_EQUAL == null\n';
-          i++;
-        } else {
-          tokens += 'EQUAL = null\n';
-        }
-      } else if (ch === ' ' || ch === '\t') {
-        continue; // Ignore whitespace
-      } else if (ch === '!') {
-        if (i + 1 < line.length && line[i + 1] === '=') {
-          tokens += 'BANG_EQUAL != null\n';
-          i++;
-        } else {
-          tokens += 'BANG ! null\n';
-        }
-      } else if (ch === '<') {
-        if (i + 1 < line.length && line[i + 1] === '=') {
-          tokens += 'LESS_EQUAL <= null\n';
-          i++;
-        } else {
-          tokens += 'LESS < null\n';
-        }
-      } else if (ch === '>') {
-        if (i + 1 < line.length && line[i + 1] === '=') {
-          tokens += 'GREATER_EQUAL >= null\n';
-          i++;
-        } else {
-          tokens += 'GREATER > null\n';
-        }
-      } else if (ch === '/') {
-        if (i + 1 < line.length && line[i + 1] === '/') {
-          break; // Ignore comments
-        } else {
-          tokens += 'SLASH / null\n';
-        }
-      } else if (ch === '"') {
-        // Handle string literals
-        let str = '';
-        i++;
-        while (i < line.length && line[i] !== '"') {
-          if (line[i] === '\\' && i + 1 < line.length) {
-            str += line[i] + line[i + 1];
-            i += 2;
-          } else {
-            str += line[i++];
-          }
-        }
-        if (i < line.length) {
-          tokens += `STRING "${str}" ${str}\n`;
-        } else {
-          console.error(`[line ${lineNumber + 1}] Error: Unterminated string.`);
-          isError = true;
-        }
-      } else if (isAlpha(ch)) {
-        // Handle identifiers and keywords
-        const start = i;
-        while (isAlphaNumeric(peek(line, i))) {
-          i++;
-        }
-        const identifier = line.slice(start, i);
-        const type = keywords[identifier] || "IDENTIFIER";
-        tokens += `${type} ${identifier} null\n`;
-        i--; // Adjust index after parsing
-      } else if (line[i] >= '0' && line[i] <= '9') {
-        // Handle number literals
-        const startDigit = i;
-        while (i < line.length && line[i] >= '0' && line[i] <= '9') {
-          i++;
-        }
-        if (line[i] === '.' && i + 1 < line.length && line[i + 1] >= '0' && line[i + 1] <= '9') {
-          i++;
-          while (i < line.length && line[i] >= '0' && line[i] <= '9') {
+      switch (ch) {
+        case '(':
+          tokens.push('LEFT_PAREN ( null');
+          break;
+        case ')':
+          tokens.push('RIGHT_PAREN ) null');
+          break;
+        case '{':
+          tokens.push('LEFT_BRACE { null');
+          break;
+        case '}':
+          tokens.push('RIGHT_BRACE } null');
+          break;
+        case ',':
+          tokens.push('COMMA , null');
+          break;
+        case '.':
+          tokens.push('DOT . null');
+          break;
+        case '-':
+          tokens.push('MINUS - null');
+          break;
+        case '+':
+          tokens.push('PLUS + null');
+          break;
+        case ';':
+          tokens.push('SEMICOLON ; null');
+          break;
+        case '*':
+          tokens.push('STAR * null');
+          break;
+        case '=':
+          if (line[i + 1] === '=') {
+            tokens.push('EQUAL_EQUAL == null');
             i++;
+          } else {
+            tokens.push('EQUAL = null');
           }
-        }
-        const numberString = line.slice(startDigit, i);
-        i--; // Adjust index after parsing
-        const num = parseFloat(numberString);
-        if (Number.isInteger(num)) {
-          tokens += `NUMBER ${numberString} ${num.toFixed(1)}\n`;
-        } else {
-          tokens += `NUMBER ${numberString} ${numberString}\n`;
-        }
-      } else {
-        console.error(`[line ${lineNumber + 1}] Error: Unexpected character: ${ch}`);
-        isError = true;
+          break;
+        case ' ':
+        case '\t':
+          continue; // Ignore whitespace
+        case '!':
+          if (line[i + 1] === '=') {
+            tokens.push('BANG_EQUAL != null');
+            i++;
+          } else {
+            tokens.push('BANG ! null');
+          }
+          break;
+        case '<':
+          if (line[i + 1] === '=') {
+            tokens.push('LESS_EQUAL <= null');
+            i++;
+          } else {
+            tokens.push('LESS < null');
+          }
+          break;
+        case '>':
+          if (line[i + 1] === '=') {
+            tokens.push('GREATER_EQUAL >= null');
+            i++;
+          } else {
+            tokens.push('GREATER > null');
+          }
+          break;
+        case '/':
+          if (line[i + 1] === '/') {
+            break; // Ignore comments
+          } else {
+            tokens.push('SLASH / null');
+          }
+          break;
+        case '"':
+          let str = '';
+          i++;
+          while (i < line.length && line[i] !== '"') {
+            if (line[i] === '\\' && i + 1 < line.length) {
+              str += line[i] + line[i + 1];
+              i += 2;
+            } else {
+              str += line[i++];
+            }
+          }
+          if (i < line.length) {
+            tokens.push(`STRING "${str}" ${str}`);
+          } else {
+            console.error(`[line ${lineNumber + 1}] Error: Unterminated string.`);
+            isError = true;
+          }
+          break;
+        default:
+          if (isAlpha(ch)) {
+            const start = i;
+            while (isAlphaNumeric(line[++i])) {}
+            const identifier = line.slice(start, i);
+            const type = keywords[identifier] || "IDENTIFIER";
+            tokens.push(`${type} ${identifier} null`);
+            i--; // Adjust index after parsing
+          } else if (isDigit(ch)) {
+            const startDigit = i;
+            while (isDigit(line[++i])) {}
+            if (line[i] === '.' && isDigit(line[i + 1])) {
+              i++;
+              while (isDigit(line[++i])) {}
+            }
+            const numberString = line.slice(startDigit, i);
+            const num = parseFloat(numberString);
+            tokens.push(`NUMBER ${numberString} ${num.toString()}`);
+            i--; // Adjust index after parsing
+          } else {
+            console.error(`[line ${lineNumber + 1}] Error: Unexpected character: ${ch}`);
+            isError = true;
+          }
       }
     }
   }
 }
 
 // Append EOF token
-tokens += 'EOF  null\n';
+tokens.push('EOF null');
 
 // Output the tokens
-console.log(tokens);
+console.log(tokens.join('\n'));
 if (isError) {
   process.exit(65);
-}
-
-// Helper functions
-function isAlpha(c) {
-  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c === '_';
-}
-
-function isDigit(c) {
-  return c >= '0' && c <= '9';
-}
-
-function isAlphaNumeric(c) {
-  return isAlpha(c) || isDigit(c);
-}
-
-function peek(line, index) {
-  return index < line.length ? line[index] : null; // Safely peek at the character
 }
