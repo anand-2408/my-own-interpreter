@@ -135,39 +135,41 @@ function isAtEnd() {
 
 // Function to scan for number literals
 // Function to scan for number literals
+// Function to scan for number literals
 function number(tokens) {
   let isFractional = false;
 
+  // Scan the integer part of the number
   while (isDigit(peek())) advance();
 
-  // Check for a fractional part.
+  // Check for a fractional part (a dot followed by digits)
   if (peek() === '.' && isDigit(peekNext())) {
-    isFractional = true; // We have a fractional number
-    // Consume the "."
-    advance();
+    isFractional = true;
+    advance(); // Consume the "."
 
+    // Scan the fractional part of the number
     while (isDigit(peek())) advance();
   }
 
-  const numberLiteral = source.substring(start, current);
+  const numberLiteral = source.substring(start, current); // Lexeme (exact matched characters)
   let literalValue;
 
   if (isFractional) {
-    // For fractional numbers, just use the original literal
+    // For fractional numbers, just use the parsed float value
     literalValue = parseFloat(numberLiteral);
   } else {
-    // For integers, format it as x.0
-    literalValue = parseFloat(numberLiteral).toFixed(1); // Convert to float and ensure one decimal place
-  }
-
-  // Ensure only `x.0` for integers and avoid trailing zeros
-  if (!isFractional) {
-    literalValue = parseFloat(literalValue).toFixed(1);  // Convert back to avoid unnecessary `.0`
+    // For integers, we format the literal as x.0
+    literalValue = parseFloat(numberLiteral).toFixed(1);
   }
 
   // Push the token with the correct lexeme and literal
-  tokens.push({ type: 'NUMBER', lexeme: numberLiteral, literal: literalValue });
+  tokens.push({
+    type: 'NUMBER',
+    lexeme: numberLiteral,
+    literal: literalValue
+  });
 }
+
 
 
 // Function to scan for string literals
