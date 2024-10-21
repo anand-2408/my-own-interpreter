@@ -41,12 +41,12 @@ const keywords = {
 
 if (fileContent.length !== 0) {
   // Split file content into lines
-  let lines = fileContent.split("\n");
+  const lines = fileContent.split("\n");
 
   // Tokenizing the lines
   for (const [lineNumber, line] of lines.entries()) {
     for (let i = 0; i < line.length; i++) {
-      let ch = line[i];
+      const ch = line[i];
 
       // Token for each character
       switch (ch) {
@@ -166,13 +166,8 @@ if (fileContent.length !== 0) {
               }
             }
             const numberString = line.slice(startDigit, i);
+            tokens += `NUMBER ${numberString} ${parseFloat(numberString).toFixed(1)}\n`;
             i--; // Adjust index after parsing
-            const num = parseFloat(numberString);
-            if (Number.isInteger(num)) {
-              tokens += `NUMBER ${numberString} ${num.toFixed(1)}\n`;
-            } else {
-              tokens += `NUMBER ${numberString} ${numberString}\n`;
-            }
           } else {
             console.error(`[line ${lineNumber + 1}] Error: Unexpected character: ${ch}`);
             isError = true;
