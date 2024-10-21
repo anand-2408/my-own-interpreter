@@ -162,7 +162,7 @@ function number(tokens) {
 
   // Ensure only `x.0` for integers and avoid trailing zeros
   if (!isFractional) {
-    literalValue = parseFloat(literalValue);  // Convert back to avoid unnecessary `.0`
+    literalValue = parseFloat(literalValue).toFixed(1);  // Convert back to avoid unnecessary `.0`
   }
 
   // Push the token with the correct lexeme and literal
