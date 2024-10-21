@@ -121,7 +121,15 @@ if (fileContent.length !== 0) {
           if (line[i + 1] === '/') {
             break; // Ignore comments
           } else {
-            tokens.push('SLASH / null');
+            // Treat as an IDENTIFIER if not part of a comment
+            let identifier = '';
+            while (isAlphaNumeric(line[i])) {
+              identifier += line[i++];
+            }
+            if (identifier) {
+              tokens.push(`IDENTIFIER ${identifier} null`);
+            }
+            i--; // Adjust index after parsing
           }
           break;
         case '"':
@@ -153,17 +161,17 @@ if (fileContent.length !== 0) {
           } else if (isDigit(ch)) {
             const startDigit = i;
             while (isDigit(line[++i])) {}
-            
+
             let isFloat = false;
             if (line[i] === '.' && isDigit(line[i + 1])) {
               isFloat = true;
               i++;
               while (isDigit(line[++i])) {}
             }
-            
+
             const numberString = line.slice(startDigit, i);
             const num = parseFloat(numberString);
-            
+
             // Ensure the number is printed as a float with .0 if it is an integer
             const outputNumber = isFloat || numberString.includes('.') ? num.toString() : num.toFixed(1);
             tokens.push(`NUMBER ${numberString} ${outputNumber}`);
