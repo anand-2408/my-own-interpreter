@@ -147,7 +147,7 @@ function number(tokens) {
   let literalValue;
   if (isFraction) {
     // Handle fractional numbers
-    literalValue = parseFloat(numberLiteral).toString(); // Convert to number and back to string to remove unnecessary zeros
+    literalValue = parseFloat(numberLiteral).toFixed(1); // Ensure single decimal point if fractional
   } else {
     // Handle whole numbers, append .0 for consistency
     literalValue = numberLiteral + ".0";
@@ -155,6 +155,7 @@ function number(tokens) {
   
   tokens.push({ type: 'NUMBER', lexeme: numberLiteral, literal: literalValue });
 }
+
 
 
 // Function to scan for string literals
