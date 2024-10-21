@@ -137,7 +137,7 @@ function number(tokens) {
   if (peek() === '.' && isDigit(peekNext())) {
     // Consume the "."
     advance();
-    isFraction = true;  // Mark that it's a fractional number
+    isFraction = true;
 
     while (isDigit(peek())) advance();
   }
@@ -146,16 +146,17 @@ function number(tokens) {
   
   let literalValue;
   if (isFraction) {
-    // Handle fractional numbers
-    literalValue = parseFloat(numberLiteral).toFixed(1); // Ensure single decimal point if fractional
+    // If it's a fractional number, preserve it as is
+    literalValue = numberLiteral;
   } else {
-    // Handle whole numbers, append .0 for consistency
+    // For whole numbers, append .0
     literalValue = numberLiteral + ".0";
   }
   
   tokens.push({ type: 'NUMBER', lexeme: numberLiteral, literal: literalValue });
 }
 
+ 
 
 
 // Function to scan for string literals
