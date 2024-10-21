@@ -1,6 +1,6 @@
 import fs from "fs";
 
-const args = process.argv.slice(2); // Skip the first two arguments (node path and script path)
+const args = process.argv.slice(2);
 if (args.length < 2) {
   console.error("Usage: ./your_program.sh tokenize test.lox");
   process.exit(1);
@@ -39,16 +39,17 @@ const keywords = {
   "while": "WHILE",
 };
 
-if (fileContent.length !== 0) {
-  // Split file content into lines
+if (fileContent.length > 0) {
   const lines = fileContent.split("\n");
 
-  // Tokenizing the lines
   for (const [lineNumber, line] of lines.entries()) {
     for (let i = 0; i < line.length; i++) {
       const ch = line[i];
 
-      // Token for each character
+      // Skip whitespace
+      if (/\s/.test(ch)) continue;
+
+      // Handle tokens
       switch (ch) {
         case '(':
           tokens += 'LEFT_PAREN ( null\n';
@@ -88,9 +89,6 @@ if (fileContent.length !== 0) {
             tokens += 'EQUAL = null\n';
           }
           break;
-        case ' ':
-        case '\t':
-          continue; // Ignore whitespace
         case '!':
           if (peek(line, i + 1) === '=') {
             tokens += 'BANG_EQUAL != null\n';
@@ -123,17 +121,13 @@ if (fileContent.length !== 0) {
           }
           break;
         case '"':
-          // Handle string literals
           let str = '';
-          i++;
-          while (i < line.length && line[i] !== '"') {
+          while (++i < line.length && line[i] !== '"') {
             if (line[i] === '\\' && i + 1 < line.length) {
-              str += line[i] + line[i + 1];
-              i++;
+              str += line[i++] + line[i];
             } else {
               str += line[i];
             }
-            i++;
           }
           if (i < line.length) {
             tokens += `STRING "${str}" ${str}\n`;
@@ -144,30 +138,21 @@ if (fileContent.length !== 0) {
           break;
         default:
           if (isAlpha(ch)) {
-            // Handle identifiers and keywords
             const start = i;
-            while (isAlphaNumeric(peek(line, i))) {
-              i++;
-            }
+            while (isAlphaNumeric(peek(line, i))) i++;
             const identifier = line.slice(start, i);
             const type = keywords[identifier] || "IDENTIFIER";
             tokens += `${type} ${identifier} null\n`;
-            i--; // Adjust index after parsing
+            i--;
           } else if (isDigit(ch)) {
-            // Handle number literals
             const startDigit = i;
-            while (isDigit(peek(line, i))) {
+            while (isDigit(peek(line, i))) i++;
+            if (peek(line, i) === '.' && isDigit(peek(line, i + 1))) {
               i++;
+              while (isDigit(peek(line, i))) i++;
             }
-            if (peek(line, i) === '.' && peek(line, i + 1) >= '0' && peek(line, i + 1) <= '9') {
-              i++;
-              while (isDigit(peek(line, i))) {
-                i++;
-              }
-            }
-            const numberString = line.slice(startDigit, i);
-            tokens += `NUMBER ${numberString} ${parseFloat(numberString).toFixed(1)}\n`;
-            i--; // Adjust index after parsing
+            tokens += `NUMBER ${line.slice(startDigit, i)} ${line.slice(startDigit, i)}\n`;
+            i--;
           } else {
             console.error(`[line ${lineNumber + 1}] Error: Unexpected character: ${ch}`);
             isError = true;
@@ -179,8 +164,6 @@ if (fileContent.length !== 0) {
 
 // Append EOF token
 tokens += 'EOF  null\n';
-
-// Output the tokens
 console.log(tokens);
 if (isError) {
   process.exit(65);
@@ -188,11 +171,11 @@ if (isError) {
 
 // Helper functions
 function isAlpha(c) {
-  return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c === '_';
+  return /[a-zA-Z_]/.test(c);
 }
 
 function isDigit(c) {
-  return c >= '0' && c <= '9';
+  return /[0-9]/.test(c);
 }
 
 function isAlphaNumeric(c) {
@@ -200,5 +183,5 @@ function isAlphaNumeric(c) {
 }
 
 function peek(line, index) {
-  return index < line.length ? line[index] : null; // Safely peek at the character
+  return index < line.length ? line[index] : null;
 }
