@@ -171,7 +171,7 @@ if (fileContent.length !== 0) {
 }
 
 // Append EOF token
-tokens.push('EOF null');
+tokens.push('EOF  null');
 
 // Output the tokens
 console.log(tokens.join('\n'));
