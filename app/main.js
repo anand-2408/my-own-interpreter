@@ -159,7 +159,14 @@ if (fileContent.length !== 0) {
             }
             const numberString = line.slice(startDigit, i);
             const num = parseFloat(numberString);
-            tokens.push(`NUMBER ${numberString} ${num.toString()}`);
+
+            // Check if the number is an integer and format accordingly
+            if (Number.isInteger(num)) {
+              tokens.push(`NUMBER ${numberString} ${num.toFixed(1)}`);
+            } else {
+              tokens.push(`NUMBER ${numberString} ${num}`);
+            }
+
             i--; // Adjust index after parsing
           } else {
             console.error(`[line ${lineNumber + 1}] Error: Unexpected character: ${ch}`);
