@@ -248,26 +248,57 @@ function tokenize(content) {
 /**
  *
  * @param {Array<Token>} tokens
+ * @returns {Array<string>}
  */
 function parse(tokens) {
-  for (const token of tokens.filter((token) => !(token instanceof Error))) {
+  const output = [];
+
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+
     switch (token.type) {
       case "NIL":
       case "FALSE":
       case "TRUE": {
-        console.log(token.lexeme);
+        output.push(token.lexeme);
         break;
       }
-      case "NUMBER": {
-        console.log(token.literal);
-        break;
-      }
+      case "NUMBER":
       case "STRING": {
-        console.log(token.literal);
+        output.push(token.literal);
         break;
+      }
+      case "LEFT_PAREN": {
+        const stacks = [token];
+
+        let group = "(group";
+
+        while (stacks.length) {
+          const current = tokens[++i];
+
+          if (!current) {
+            throw new Error("Expect ')' after expression.");
+          }
+
+          if (current.type === "LEFT_PAREN") {
+            group += " (group";
+            stacks.push(current);
+          } else if (current.type === "RIGHT_PAREN") {
+            group += ")";
+            stacks.pop();
+          } else {
+            const exp = parse([current])[0];
+
+            group += " " + exp;
+          }
+        }
+
+        output.push(group);
       }
     }
   }
+
+  return output;
 }
 
 switch (command) {
@@ -289,7 +320,11 @@ switch (command) {
     }
     break;
   case "parse":
-    parse(tokenize(fileContent));
+    const output = parse(
+      tokenize(fileContent).filter((token) => !(token instanceof Error))
+    );
+
+    console.log(output.join(" "));
     break;
   default: {
     console.error(`Usage: Unknown command: ${command}`);
