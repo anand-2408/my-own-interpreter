@@ -160,9 +160,9 @@ function tokenize(content) {
         }
       }
     }
-    // Ensure EOF token is always added
-    tokens.push({ type: "EOF", lexeme: "", literal: null });
   }
+  // Ensure EOF token is always added
+  tokens.push({ type: "EOF", lexeme: "", literal: null });
   return tokens;
 }
 
@@ -192,7 +192,15 @@ switch (command) {
     }
     break;
   }
-  case "parse":
-    parse(tokenize(fileContent));
+  case "parse": {
+    const tokens = tokenize(fileContent);
+    for (const token of tokens) {
+      if (token instanceof Error) {
+        console.error(token.message);
+      } else {
+        console.log(`${token.lexeme} ${token.literal}`);
+      }
+    }
     break;
+  }
 }
