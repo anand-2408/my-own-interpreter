@@ -148,10 +148,10 @@ function tokenize(content) {
             }
 
             // Handle Number
-            if (/[0-9]/.test(char)) {
+            if (isNumber(char)) {
               let numberStr = char;
               for (let i = columnIndex + 1; i < line.length; i++) {
-                if (/[0-9]/.test(line[i])) {
+                if (isNumber(line[i])) {
                   numberStr += line[i];
                   columnIndex = i;
                 } else if (line[i] === ".") {
@@ -250,11 +250,13 @@ function tokenize(content) {
  * @param {Array<Token>} tokens
  * @returns {Array<string>}
  */
-function parse(tokens) {
+function parse(tokens, { stacks = [] } = {}) {
   const output = [];
 
-  for (let i = 0; i < tokens.length; i++) {
+  loop: for (let i = 0; i < tokens.length; i++) {
     const token = tokens[i];
+
+    if (!token) break;
 
     switch (token.type) {
       case "NIL":
@@ -269,31 +271,39 @@ function parse(tokens) {
         break;
       }
       case "LEFT_PAREN": {
-        const stacks = [token];
+        output.push("(group");
+        stacks.push(token);
 
-        let group = "(group";
+        // Find the matching right paren
+        const rightIndex = tokens.slice(i).findIndex((token) => {
+          return token.type === "RIGHT_PAREN";
+        });
 
-        while (stacks.length) {
-          const current = tokens[++i];
-
-          if (!current) {
-            throw new Error("Expect ')' after expression.");
-          }
-
-          if (current.type === "LEFT_PAREN") {
-            group += " (group";
-            stacks.push(current);
-          } else if (current.type === "RIGHT_PAREN") {
-            group += ")";
-            stacks.pop();
-          } else {
-            const exp = parse([current])[0];
-
-            group += " " + exp;
-          }
+        if (rightIndex === -1) {
+          throw new Error("Expect ')' after expression.");
+        }
+        break;
+      }
+      case "RIGHT_PAREN": {
+        if (stacks.length === 0) {
+          throw new Error("Unexpected ')'");
         }
 
-        output.push(group);
+        stacks.pop();
+
+        const val = output.pop() + ")";
+        output.push(val);
+        break;
+      }
+      case "MINUS": {
+        const rest = parse(tokens.slice(i + 1), { stacks });
+        output.push(`(- ${rest.join(" ")})`);
+        break loop;
+      }
+      case "BANG": {
+        const rest = parse(tokens.slice(i + 1), { stacks });
+        output.push(`(! ${rest.join(" ")})`);
+        break loop;
       }
     }
   }
@@ -330,4 +340,8 @@ switch (command) {
     console.error(`Usage: Unknown command: ${command}`);
     process.exit(1);
   }
+}
+
+function isNumber(char) {
+  return typeof char === "string" && /[0-9]/.test(char);
 }
