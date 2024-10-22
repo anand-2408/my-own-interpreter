@@ -82,10 +82,8 @@ const tokenize = (lines) => {
           if (line[i + 1] === '=') i++; 
           break;
         case '/':
-          // Check if this is a comment, and skip the entire line if it is
           if (line[i + 1] === '/') {
-            i = line.length; // Skip the rest of the line
-            break;
+            break; // Ignore the rest of the line as a comment
           }
           tokens.push('SLASH / null'); 
           break;
