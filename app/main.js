@@ -160,6 +160,7 @@ function tokenize(content) {
         }
       }
     }
+    // Ensure EOF token is always added
     tokens.push({ type: "EOF", lexeme: "", literal: null });
   }
   return tokens;
