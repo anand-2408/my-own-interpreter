@@ -262,6 +262,10 @@ function parse(tokens) {
         console.log(token.literal);
         break;
       }
+      case "STRING": {
+        console.log(token.literal);
+        break;
+      }
     }
   }
 }
