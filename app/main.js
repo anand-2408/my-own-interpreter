@@ -1,283 +1,283 @@
 import fs from "fs";
-import { fileURLToPath } from 'url';
-import path from "path";
-import Language from "./utils/language.js";
 
 const args = process.argv.slice(2); // Skip the first two arguments (node path and script path)
+
 if (args.length < 2) {
   console.error("Usage: ./your_program.sh tokenize <filename>");
   process.exit(1);
 }
 
 const command = args[0];
-const commands = ["tokenize", "parse"]; // Move the commands array outside the condition for better readability
-if (!commands.includes(command)) {
-  console.error(`Usage: Unknown command: ${command}`);
-  process.exit(1);
-}
-
-// You can use print statements as follows for debugging, they'll be visible when running tests.
-console.error("Logs from your program will appear here!");
 
 const filename = args[1];
-let fileContent = fs.readFileSync(filename, "utf8");
 
-class Tokenizer {
-  static TOKEN_MAPPING = {
-    "(": "LEFT_PAREN",
-    ")": "RIGHT_PAREN",
-    "{": "LEFT_BRACE",
-    "}": "RIGHT_BRACE",
-    "[": "LEFT_BRACKET",
-    "]": "RIGHT_BRACKET",
-    ",": "COMMA",
-    ".": "DOT",
-    "-": "MINUS",
-    "+": "PLUS",
-    ";": "SEMICOLON",
-    "*": "STAR",
-    "=": "EQUAL",
-    "==": "EQUAL_EQUAL",
-    "!": "BANG",
-    "!=": "BANG_EQUAL",
-    "<": "LESS",
-    ">": "GREATER",
-    "<=": "LESS_EQUAL",
-    ">=": "GREATER_EQUAL",
-    "//": "COMMENT",
-    "/": "SLASH",
-    " ": "WHITESPACE",
-    "\t": "WHITESPACE",
-    "\"": "STRING"
-  };
-  
-  static IGNORED_MAPPINGS = ["COMMENT", "WHITESPACE"];
-  static KEYWORD_MAPPINGS = {
-    "and": "AND",
-    "class": "CLASS",
-    "else": "ELSE",
-    "false": "FALSE",
-    "for": "FOR",
-    "fun": "FUN",
-    "if": "IF",
-    "nil": "NIL",
-    "or": "OR",
-    "print": "PRINT",
-    "return": "RETURN",
-    "super": "SUPER",
-    "this": "THIS",
-    "true": "TRUE",
-    "var": "VAR",
-    "while": "WHILE"
-  };
-  
-  static MAPPING_KEYS = Object.keys(Tokenizer.TOKEN_MAPPING).sort((a, b) => b.length - a.length);
-  static ERROR_MAPPING = {
-    "tokenizer.unexpected_character": "Unexpected character: %d",
-    "tokenizer.unterminated_string": "Unterminated string."
-  };
-  
-  constructor() {
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filename);
-    
-    const config = JSON.parse(fs.readFileSync(path.join(__dirname, "lox.lang.json"), "utf8"));
-    this.BST = this.genBST();
-    this.REVERSE_MAPPING = Object.entries(Tokenizer.TOKEN_MAPPING).reduce((ret, entry) => {
-      const [key, value] = entry;
-      ret[value] = key;
-      return ret;
-    }, {});
-    
-    let { tokens, errors } = new Language(config).tokenizer.tokenize(fileContent);
-    this.tokens = tokens; // Store tokens for later use
-    this.errors = errors; // Store errors for later use
-  }
+const fileContent = fs.readFileSync(filename, "utf8");
 
-  genBSTPart(bst, keyPart, fullKey) {
-    if (bst[keyPart[0]] == null) {
-      bst[keyPart[0]] = {
-        "sub": {}
-      };
-    }
-    if (keyPart.length > 1) {
-      this.genBSTPart(bst[keyPart[0]].sub, keyPart.slice(1), fullKey);
-    } else {
-      bst[keyPart[0]].mapping = Tokenizer.TOKEN_MAPPING[fullKey];
-    }
-    return bst;
-  }
+/**
+ * @typedef {Object} Token
+ * @property {string} type
+ * @property {string} lexeme
+ * @property {any} literal
+ */
 
-  genBST() {
-    let bst = {};
-    for (let i = 0; i < Tokenizer.MAPPING_KEYS.length; i++) {
-      let key = Tokenizer.MAPPING_KEYS[i];
-      this.genBSTPart(bst, key, key);
-    }
-    return bst;
-  }
+/**
+ *
+ * @param {string} content
+ * @returns
+ */
+function tokenize(content) {
+  /**
+   * @type {Array<Token | Error>} tokens
+   */
+  const tokens = [];
 
-  checkBST(char, bst) {
-    if (bst) {
-      if (bst[char[0]]) {
-        let x = bst[char[0]];
-        if ((x.sub != {}) && x.sub[char[1]]) {
-          return this.checkBST(char.slice(1), x.sub);
-        } else {
-          return x.mapping;
-        }
-      } else {
-        return null;
-      }
-    } else {
-      return this.checkBST(char, this.BST);
-    }
-  }
+  if (content.length !== 0) {
+    const lines = content.split(/\n/);
 
-  parseString(string, key) {
-    let charIDX = 0;
-    let nextChar = string[charIDX];
-    let value = "";
-    while (nextChar !== key && charIDX < string.length) {
-      value += nextChar;
-      charIDX += 1;
-      nextChar = string[charIDX];
-    }
-    if (nextChar === key) {
-      return {
-        value,
-        charIDX
-      };
-    } else {
-      return null;
-    }
-  }
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+      const lineNumber = lineIndex + 1;
+      const line = lines[lineIndex];
+      lineLoop: for (
+        let columnIndex = 0;
+        columnIndex < line.length;
+        columnIndex++
+      ) {
+        const char = line[columnIndex];
+        const nextChar = line[columnIndex + 1];
 
-  parseNumber(number) {
-    let charIDX = 0;
-    let char = number[charIDX];
-    let str = "";
-    while (/[\d.]/.test(char)) {
-      str += char;
-      charIDX += 1;
-      char = number[charIDX];
-    }
-    let num = parseFloat(str);
-    return {
-      str,
-      num,
-      charIDX
-    };
-  }
-
-  parseLine(line, lineNum) {
-    let tokens = [];
-    let errors = [];
-    for (let j = 0; j < line.length; j++) {
-      let terminate = false;
-      let found = false;
-      if (!/[A-Za-z_]/.test(line[j])) {
-        if (!/\d/.test(line[j])) {
-          let mapping = this.checkBST(line.slice(j));
-          if (mapping !== null) {
-            let key = this.REVERSE_MAPPING[mapping];
-            if (!Tokenizer.IGNORED_MAPPINGS.includes(mapping)) {
-              if (mapping !== "STRING") {
-                j += key.length - 1;
-                tokens.push([mapping, key, null]);
-              } else {
-                let parsed = this.parseString(line.slice(j + 1), key);
-                if (parsed === null) {
-                  errors.push([lineNum, "tokenizer.unterminated_string", null]);
-                  terminate = true;
-                } else {
-                  tokens.push(["STRING", `"${parsed.value}"`, parsed.value]);
-                  j += parsed.charIDX + 1;
-                }
+        switch (char) {
+          case "(":
+            tokens.push({ type: "LEFT_PAREN", lexeme: "(", literal: null });
+            break;
+          case ")":
+            tokens.push({ type: "RIGHT_PAREN", lexeme: ")", literal: null });
+            break;
+          case "{":
+            tokens.push({ type: "LEFT_BRACE", lexeme: "{", literal: null });
+            break;
+          case "}":
+            tokens.push({ type: "RIGHT_BRACE", lexeme: "}", literal: null });
+            break;
+          case ",":
+            tokens.push({ type: "COMMA", lexeme: ",", literal: null });
+            break;
+          case ".":
+            tokens.push({ type: "DOT", lexeme: ".", literal: null });
+            break;
+          case "-":
+            tokens.push({ type: "MINUS", lexeme: "-", literal: null });
+            break;
+          case "+":
+            tokens.push({ type: "PLUS", lexeme: "+", literal: null });
+            break;
+          case ";":
+            tokens.push({ type: "SEMICOLON", lexeme: ";", literal: null });
+            break;
+          case "*":
+            tokens.push({ type: "STAR", lexeme: "*", literal: null });
+            break;
+          case "=":
+            if (nextChar === "=") {
+              tokens.push({ type: "EQUAL_EQUAL", lexeme: "==", literal: null });
+              columnIndex++;
+            } else {
+              tokens.push({ type: "EQUAL", lexeme: "=", literal: null });
+            }
+            break;
+          case "!":
+            if (nextChar === "=") {
+              tokens.push({ type: "BANG_EQUAL", lexeme: "!=", literal: null });
+              columnIndex++;
+            } else {
+              tokens.push({ type: "BANG", lexeme: "!", literal: null });
+            }
+            break;
+          case "<":
+            if (nextChar === "=") {
+              tokens.push({ type: "LESS_EQUAL", lexeme: "<=", literal: null });
+              columnIndex++;
+            } else {
+              tokens.push({ type: "LESS", lexeme: "<", literal: null });
+            }
+            break;
+          case ">":
+            if (nextChar === "=") {
+              tokens.push({
+                type: "GREATER_EQUAL",
+                lexeme: ">=",
+                literal: null,
+              });
+              columnIndex++;
+            } else {
+              tokens.push({ type: "GREATER", lexeme: ">", literal: null });
+            }
+            break;
+          case "/":
+            if (nextChar === "/") {
+              // Go to the next line
+              break lineLoop;
+            } else {
+              tokens.push({ type: "SLASH", lexeme: "/", literal: null });
+            }
+            break;
+          case '"': {
+            let str = undefined;
+            for (let i = columnIndex + 1; i < line.length; i++) {
+              if (line[i] === '"') {
+                str = line.substring(columnIndex + 1, i);
+                columnIndex = i;
+                break;
               }
             }
+
+            if (typeof str === "string") {
+              tokens.push({ type: "STRING", lexeme: `"${str}"`, literal: str });
+            } else {
+              tokens.push(
+                new Error(`[line ${lineNumber}] Error: Unterminated string.`)
+              );
+              break lineLoop;
+            }
+
+            break;
           }
-        } else {
-          let parsed = this.parseNumber(line.slice(j));
-          tokens.push(["NUMBER", parsed.str, parsed.num]);
-          j += parsed.charIDX - 1;
+          default:
+            // SKip whitespaces
+            if (/\s/.test(char)) {
+              break;
+            }
+
+            // Handle Number
+            if (/[0-9]/.test(char)) {
+              let numberStr = char;
+              for (let i = columnIndex + 1; i < line.length; i++) {
+                if (/[0-9]/.test(line[i])) {
+                  numberStr += line[i];
+                  columnIndex = i;
+                } else if (line[i] === ".") {
+                  if (numberStr.includes(".")) {
+                    tokens.push(
+                      new Error(
+                        `[line ${lineNumber}] Error: Unexpected character: ${line[i]}`
+                      )
+                    );
+                    break lineLoop;
+                  } else {
+                    numberStr += line[i];
+                    columnIndex = i;
+                  }
+                } else {
+                  break;
+                }
+              }
+
+              const number = Number(numberStr);
+
+              tokens.push({
+                type: "NUMBER",
+                lexeme: numberStr,
+                literal: Number.isInteger(number) ? number + ".0" : number,
+              });
+              break;
+            }
+
+            // Handle Identifier
+            if (/[a-zA-Z_]/.test(char)) {
+              let identifier = char;
+              for (let i = columnIndex + 1; i < line.length; i++) {
+                if (/[a-zA-Z0-9_]/.test(line[i])) {
+                  identifier += line[i];
+                  columnIndex = i;
+                } else {
+                  break;
+                }
+              }
+
+              const reservedWords = [
+                "and",
+                "class",
+                "else",
+                "false",
+                "for",
+                "fun",
+                "if",
+                "nil",
+                "or",
+                "print",
+                "return",
+                "super",
+                "this",
+                "true",
+                "var",
+                "while",
+              ];
+
+              if (reservedWords.includes(identifier)) {
+                tokens.push({
+                  type: identifier.toUpperCase(),
+                  lexeme: identifier,
+                  literal: null,
+                });
+              } else {
+                tokens.push({
+                  type: "IDENTIFIER",
+                  lexeme: identifier,
+                  literal: null,
+                });
+              }
+              break;
+            }
+
+            tokens.push(
+              new Error(
+                `[line ${lineNumber}] Error: Unexpected character: ${char}`
+              )
+            );
         }
-      } else {
-        let val = "";
-        while (/[A-Za-z0-9_]/.test(line[j]) && j !== line.length) {
-          val += line[j];
-          j += 1;
-        }
-        j -= 1;
-        if (Tokenizer.KEYWORD_MAPPINGS[val]) {
-          tokens.push([Tokenizer.KEYWORD_MAPPINGS[val], val, null]);
-        } else {
-          tokens.push(["IDENTIFIER", val, null]);
-        }
-        found = true;
-      }
-      if (terminate) break;
-      if (!found) {
-        errors.push([lineNum, "tokenizer.unexpected_character", line[j]]);
       }
     }
-    return {
-      tokens,
-      errors
-    };
+
+    tokens.push({ type: "EOF", lexeme: "", literal: null });
+  } else {
+    tokens.push({ type: "EOF", lexeme: "", literal: null });
   }
 
-  main(fileContent) {
-    if (fileContent.length !== 0) {
-      let fileLines = fileContent.split("\n");
-      let tokens = [];
-      let errors = [];
-      for (let i = 0; i < fileLines.length; i++) {
-        let parsed = this.parseLine(fileLines[i], i + 1);
-        tokens = tokens.concat(parsed.tokens);
-        errors = errors.concat(parsed.errors);
-      }
-      tokens.push(["EOF", null, "null"]);
-      for (let i = 0; i < errors.length; i++) {
-        let error = errors[i];
-        console.error(`[line ${error[0]}] Error: ${Tokenizer.ERROR_MAPPING[error[1]].replace("%d", error[2])}`);
-      }
-      let numberFormat = Intl.NumberFormat("en-us", {
-        minimumFractionDigits: 1,
-        useGrouping: false
-      });
-      for (let i = 0; i < tokens.length; i++) {
-        let token = tokens[i];
-        if (token[2] == null) token[2] = "null";
-        if (typeof token[2] === "number") token[2] = numberFormat.format(token[2]);
-        console.log(tokens[i].join(" "));
-      }
-      if (errors.length > 0) {
-        process.exit(65);
-      }
-    } else {
-      console.log("EOF  null");
-    }
-    
-    // Move this inside the command check to ensure it only runs during 'parse' command
-    let ast = language.parser.parse(this.tokens);
-    if (command === "parse") {
-      language.parser.print(ast);
-      if (errors.length > 0) {
-        process.exit(65);
-      }
-    }
+  return tokens;
+}
+
+/**
+ *
+ * @param {Array<Token | Error>} tokens
+ */
+function parse(tokens) {
+  for (const token of tokens) {
+    console.log(token.lexeme);
   }
 }
 
-// Create the tokenizer and execute the main function
-let tokenizer = new Tokenizer();
-tokenizer.main(fileContent);
+switch (command) {
+  case "tokenize":
+    {
+      const tokens = tokenize(fileContent);
 
-if (command === "tokenize") {
-  tokenizer.print(tokenizer.tokens, tokenizer.errors);
-  if (tokenizer.errors.length > 0) {
-    process.exit(65);
+      for (const token of tokens) {
+        if (token instanceof Error) {
+          console.error(token.message);
+        } else {
+          console.log(`${token.type} ${token.lexeme} ${token.literal}`);
+        }
+      }
+
+      if (tokens.find((token) => token instanceof Error)) {
+        process.exit(65);
+      }
+    }
+    break;
+  case "parse":
+    parse(tokenize(fileContent));
+    break;
+  default: {
+    console.error(`Usage: Unknown command: ${command}`);
+    process.exit(1);
   }
-  process.exit();
 }
